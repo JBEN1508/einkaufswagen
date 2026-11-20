@@ -87,6 +87,12 @@ if (fetchResult) {
 }
 if (fetchError) log.push(`✖ Abruf fehlgeschlagen: ${fetchError}`);
 
+// Nur Code geändert (push) und nichts importiert -> nichts speichern
+if (process.env.SKIP_FETCH === "1" && log.length === 0) {
+  console.log("Kein Abruf (nur Veröffentlichung), keine Importe.");
+  process.exit(0);
+}
+
 // ---- 3) speichern
 const list = [...products.values()].sort((a, b) => a.id.localeCompare(b.id));
 fs.mkdirSync(path.dirname(DATA), { recursive: true });
