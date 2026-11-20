@@ -5,7 +5,7 @@
 // Merkliste und geänderte Kategorien werden auf dem Gerät gespeichert (localStorage).
 import { STORES, storeById } from "./marktguru.js";
 import { CATEGORIES } from "./categories.js";
-import { currentWeekIndex, formatWeek, isoWeekOfIndex } from "./predict.js";
+import { currentWeekIndex, formatWeek, isoWeekOfIndex, mondayOfIndex } from "./predict.js";
 import { describe } from "./data.js";
 
 const $ = (id) => document.getElementById(id);
@@ -176,6 +176,7 @@ function buildStaticUI() {
     if (e.target === $("detail") || e.target.closest("[data-close]")) $("detail").hidden = true;
   });
 
+  buildZettelUI();
   $("set-token").value = state.token;
   $("btn-token-save").addEventListener("click", () => {
     state.token = $("set-token").value.trim();
@@ -188,9 +189,11 @@ function buildStaticUI() {
 function render() {
   const nowIdx = currentWeekIndex();
   const isSettings = state.view === "settings";
+  const isZettel = state.view === "zettel";
   for (const b of $("bottom-nav").querySelectorAll("button")) b.classList.toggle("active", b.dataset.view === state.view);
-  for (const id of ["list", "list-info", "toolbar", "store-chips"]) $(id).hidden = isSettings;
+  for (const id of ["list", "list-info", "toolbar", "store-chips"]) $(id).hidden = isSettings || isZettel;
   $("settings").hidden = !isSettings;
+  $("zettel").hidden = !isZettel;
 
   const { week, year } = isoWeekOfIndex(nowIdx);
   const zip = state.meta.zip || "21629";
@@ -199,6 +202,7 @@ function render() {
     : `KW ${week}/${year} · PLZ ${zip} · noch keine Angebote geladen`;
 
   if (isSettings) { renderSettings(); $("btn-more").hidden = true; return; }
+  if (isZettel) { renderZettel(); $("btn-more").hidden = true; return; }
 
   const enabled = state.meta.stores || STORES.map((s) => s.id);
   const withInfo = [...state.products.values()].filter((p) => enabled.includes(p.store)).map((p) => ({ p, d: describe(p, nowIdx) }));
@@ -298,6 +302,18 @@ function predLine(pred) {
   return `${when}${inWeeks}<span>· alle ~${pred.interval} Wo.</span><span class="conf ${pred.confidence}">${pred.confidence}</span>`;
 }
 
+const CAT_ICON = {
+  "Obst&Gemüse": "🥦", "Molkerei&Käse": "🧀", "Grundnahrung": "🍝", "Tiefkühl": "🧊", "Fisch&Meeresfrüchte": "🐟",
+  "Fleisch&Wurst": "🥩", "Getränke": "🥤", "Knabbern & Naschen": "🍫", "Drogerie": "🧴", "Haushalt": "🧽", "Sonstiges": "🛍",
+};
+function thumbHTML(p) {
+  const icon = CAT_ICON[p.category] || "🛍";
+  if (!p.image) return `<div class="thumb ph" aria-hidden="true">${icon}</div>`;
+  // Falls das Bild nicht lädt: Symbol der Kategorie anzeigen
+  return `<img class="thumb" src="${esc(p.image)}" alt="" loading="lazy" decoding="async"
+    onerror="this.outerHTML='<div class=&quot;thumb ph&quot;>${icon}</div>'" />`;
+}
+
 function cardHTML({ p, d }) {
   const s = storeById[p.store];
   const e = d.current || d.upcoming || d.latest;
@@ -306,12 +322,17 @@ function cardHTML({ p, d }) {
   return `<div class="card" data-id="${esc(p.id)}">
     <div class="card-top"><span class="store-badge" style="--c:${s.color}">${esc(s.label)}</span><span class="cat">${esc(p.category)}</span>${tag}
       <button class="star ${p.favorite ? "on" : ""}" type="button" aria-label="Merken">${p.favorite ? "★" : "☆"}</button></div>
-    <div class="name">${esc(p.name)}</div>
-    <div class="price-row">
-      <span class="price">${money(e?.price)}</span>
-      ${e?.oldPrice ? `<span class="old">${money(e.oldPrice)}</span>` : ""}
-      ${e?.savedPercent ? `<span class="pct">${pctFmt(e.savedPercent)}</span>` : ""}
-      <span class="valid">${esc(validTxt)}</span>
+    <div class="card-body">
+      ${thumbHTML(p)}
+      <div class="card-main">
+        <div class="name">${esc(p.name)}</div>
+        <div class="price-row">
+          <span class="price">${money(e?.price)}</span>
+          ${e?.oldPrice ? `<span class="old">${money(e.oldPrice)}</span>` : ""}
+          ${e?.savedPercent ? `<span class="pct">${pctFmt(e.savedPercent)}</span>` : ""}
+        </div>
+        <div class="valid">${esc(validTxt)}</div>
+      </div>
     </div>
     <div class="pred">${predLine(d.pred)}</div>
   </div>`;
@@ -359,6 +380,7 @@ function openDetail(id) {
 
   $("detail-body").innerHTML = `
     <h2>${esc(p.name)}</h2>
+    ${p.imageLarge || p.image ? `<img class="detail-img" src="${esc(p.imageLarge || p.image)}" alt="" onerror="this.remove()" />` : ""}
     <div class="meta"><span class="store-badge" style="--c:${s.color}">${esc(s.label)}</span>
       ${d.bestPrice != null ? `<span class="hint">Bester bekannter Preis: <b>${money(d.bestPrice)}</b></span>` : ""}</div>
     <div class="pred-box">${predHTML}</div>
@@ -367,6 +389,7 @@ function openDetail(id) {
       <label class="field"><span>Kategorie</span><select id="detail-cat">${CATEGORIES.map((c) => `<option ${c === p.category ? "selected" : ""}>${esc(c)}</option>`).join("")}</select></label>
     </div>
     <div class="detail-actions">
+      <button id="detail-shop" class="btn" type="button">🛒 Auf den Einkaufszettel</button>
       <button id="detail-fav" class="btn btn-secondary" type="button">${p.favorite ? "★ Von Merkliste entfernen" : "☆ Auf die Merkliste"}</button>
     </div>`;
   $("detail-cat").addEventListener("change", (e) => {
@@ -376,6 +399,11 @@ function openDetail(id) {
     render();
   });
   $("detail-fav").addEventListener("click", () => { toggleFav(p.id); openDetail(p.id); });
+  $("detail-shop").addEventListener("click", () => {
+    const e = d.current || d.upcoming || d.latest;
+    addShoppingItem(p.name, { store: p.store, price: e?.price ?? null, productId: p.id });
+    toast(`„${p.name}“ steht jetzt auf dem Einkaufszettel`);
+  });
   $("detail").hidden = false;
 }
 
@@ -386,6 +414,119 @@ function toggleFav(id) {
   if (p.favorite) state.favorites.add(id); else state.favorites.delete(id);
   local.set("favorites", [...state.favorites]);
   render();
+}
+
+// ---------------------------------------------------------------- Einkaufszettel
+const zettel = {
+  tab: "liste",
+  items: local.get("shopping", []),          // [{ id, text, done, store, price, productId }]
+  meals: local.get("meals", {}),             // { "2026-W48": { "0": "Spaghetti", … } }
+  weekIdx: currentWeekIndex(),
+};
+const saveItems = () => local.set("shopping", zettel.items);
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+
+function addShoppingItem(text, extra = {}) {
+  text = String(text || "").trim();
+  if (!text) return;
+  // gleiches Produkt nicht doppelt
+  if (extra.productId && zettel.items.some((i) => i.productId === extra.productId && !i.done)) return;
+  zettel.items.unshift({ id: uid(), text, done: false, ...extra });
+  saveItems();
+}
+
+function weekKey(idx) {
+  const { year, week } = isoWeekOfIndex(idx);
+  return `${year}-W${String(week).padStart(2, "0")}`;
+}
+
+function renderZettel() {
+  for (const b of document.querySelectorAll(".segmented button")) b.classList.toggle("active", b.dataset.tab === zettel.tab);
+  $("tab-liste").hidden = zettel.tab !== "liste";
+  $("tab-essen").hidden = zettel.tab !== "essen";
+  if (zettel.tab === "liste") renderListe(); else renderEssen();
+}
+
+function renderListe() {
+  const open = zettel.items.filter((i) => !i.done);
+  const done = zettel.items.filter((i) => i.done);
+  const row = (i) => {
+    const s = i.store ? storeById[i.store] : null;
+    const sub = [s ? s.label : "", i.price != null ? money(i.price) : ""].filter(Boolean).join(" · ");
+    return `<li class="${i.done ? "done" : ""}" data-id="${esc(i.id)}">
+      <input type="checkbox" ${i.done ? "checked" : ""} aria-label="abhaken" />
+      <div class="txt"><span>${esc(i.text)}</span>${sub ? `<small>${esc(sub)}</small>` : ""}</div>
+      <button class="del" type="button" aria-label="löschen">✕</button></li>`;
+  };
+  $("liste").innerHTML = [...open, ...done].map(row).join("") ||
+    `<li class="empty-li"><div class="txt"><small>Noch nichts auf dem Zettel. Oben eintippen oder bei einem Angebot auf „Auf den Einkaufszettel“ tippen.</small></div></li>`;
+  $("liste-info").textContent = zettel.items.length ? `${done.length} von ${zettel.items.length} erledigt` : "";
+  $("liste-clear").hidden = !done.length;
+}
+
+const DAYS = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"];
+function renderEssen() {
+  const idx = zettel.weekIdx;
+  const monday = mondayOfIndex(idx);
+  const sunday = new Date(monday.getTime() + 6 * 86400000);
+  const f = (d) => `${String(d.getUTCDate()).padStart(2, "0")}.${String(d.getUTCMonth() + 1).padStart(2, "0")}.`;
+  const nowIdx = currentWeekIndex();
+  const rel = idx === nowIdx ? "diese Woche" : idx === nowIdx + 1 ? "nächste Woche" : idx === nowIdx - 1 ? "letzte Woche" : "";
+  $("essen-week").innerHTML = `KW ${isoWeekOfIndex(idx).week} · ${f(monday)}–${f(sunday)}${rel ? `<br><small class="hint">${rel}</small>` : ""}`;
+  $("essen-today").hidden = idx === nowIdx;
+  const plan = zettel.meals[weekKey(idx)] || {};
+  const todayStr = new Date().toDateString();
+  $("essen-days").innerHTML = DAYS.map((name, i) => {
+    const day = new Date(monday.getTime() + i * 86400000);
+    const isToday = new Date(day.getUTCFullYear(), day.getUTCMonth(), day.getUTCDate()).toDateString() === todayStr;
+    return `<div class="day ${isToday ? "today" : ""}">
+      <label for="meal-${i}"><span>${name}${isToday ? " · heute" : ""}</span><span>${f(day)}</span></label>
+      <textarea id="meal-${i}" data-day="${i}" rows="1" placeholder="Was gibt es?">${esc(plan[i] || "")}</textarea></div>`;
+  }).join("");
+}
+
+function buildZettelUI() {
+  document.querySelector(".segmented").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-tab]");
+    if (b) { zettel.tab = b.dataset.tab; renderZettel(); }
+  });
+  $("liste-form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const v = $("liste-input").value;
+    // mehrere Einträge auf einmal: "Milch, Butter, Eier"
+    for (const part of v.split(/[,;\n]/).reverse()) addShoppingItem(part);
+    $("liste-input").value = "";
+    renderListe();
+  });
+  $("liste").addEventListener("change", (e) => {
+    const li = e.target.closest("li[data-id]");
+    const it = li && zettel.items.find((i) => i.id === li.dataset.id);
+    if (!it) return;
+    it.done = e.target.checked;
+    saveItems(); renderListe();
+  });
+  $("liste").addEventListener("click", (e) => {
+    if (!e.target.closest(".del")) return;
+    const id = e.target.closest("li[data-id]").dataset.id;
+    zettel.items = zettel.items.filter((i) => i.id !== id);
+    saveItems(); renderListe();
+  });
+  $("liste-clear").addEventListener("click", () => {
+    zettel.items = zettel.items.filter((i) => !i.done);
+    saveItems(); renderListe();
+  });
+  $("essen-prev").addEventListener("click", () => { zettel.weekIdx--; renderEssen(); });
+  $("essen-next").addEventListener("click", () => { zettel.weekIdx++; renderEssen(); });
+  $("essen-today").addEventListener("click", () => { zettel.weekIdx = currentWeekIndex(); renderEssen(); });
+  $("essen-days").addEventListener("input", (e) => {
+    const t = e.target.closest("textarea[data-day]");
+    if (!t) return;
+    const key = weekKey(zettel.weekIdx);
+    const plan = zettel.meals[key] || (zettel.meals[key] = {});
+    if (t.value.trim()) plan[t.dataset.day] = t.value; else delete plan[t.dataset.day];
+    if (!Object.keys(plan).length) delete zettel.meals[key];
+    local.set("meals", zettel.meals);
+  });
 }
 
 // ---------------------------------------------------------------- Hinweis

@@ -59,6 +59,7 @@ export function mergeOffers(products, offers, now = new Date()) {
       else if (entry.price != null && (p.history[i].price == null || p.history[i].source !== "marktguru" || entry.price < p.history[i].price)) p.history[i] = entry;
     }
     p.history.sort((a, b) => a.week - b.week);
+    if (o.image) { p.image = o.image; p.imageLarge = o.imageLarge || o.image; } // neuestes Bild gewinnt
     p.lastSeen = new Date(now).toISOString();
     changed.set(id, p);
   }

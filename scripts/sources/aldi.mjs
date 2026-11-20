@@ -47,8 +47,11 @@ export function parseAldiHtml(html) {
     const to = promo.validUntilLocalDate || group.end || null;
     const brand = (it.brandName || "").trim();
     const name = brand && !it.name.toLowerCase().includes(brand.toLowerCase()) ? `${brand} ${it.name}` : it.name;
+    const img = (it.assets || []).find((a) => a.type === "primary")?.url || (it.assets || [])[0]?.url || null;
     offers.push({
       mgId: `aldi-${it.objectID || id}`,
+      image: img ? `${img}?wid=240` : null,
+      imageLarge: img ? `${img}?wid=640` : null,
       store: "aldi",
       name: name.replace(/\s+/g, " ").trim(),
       brand,

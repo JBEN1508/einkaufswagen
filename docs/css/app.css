@@ -99,9 +99,9 @@ main{ padding:0 16px; max-width:900px; margin:0 auto; }
 .stats{ font-size:.9rem; color:#d4dbe3; line-height:1.6; }
 
 /* Navigation unten */
-.bottom-nav{ position:fixed; left:0; right:0; bottom:0; z-index:30; display:grid; grid-template-columns:repeat(5,1fr);
+.bottom-nav{ position:fixed; left:0; right:0; bottom:0; z-index:30; display:grid; grid-template-columns:repeat(6,1fr);
   height:calc(var(--nav-h) + var(--safe-bottom)); padding-bottom:var(--safe-bottom); background:#0d0d0d; border-top:1px solid var(--border); }
-.bottom-nav button{ background:none; border:none; color:var(--muted); font-size:.68rem; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; cursor:pointer; }
+.bottom-nav button{ background:none; border:none; color:var(--muted); font-size:.62rem; line-height:1.1; text-align:center; padding:0 2px; hyphens:manual; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; cursor:pointer; }
 .bottom-nav button span{ font-size:1.25rem; line-height:1; }
 .bottom-nav button.active{ color:var(--accent); }
 
@@ -136,3 +136,37 @@ main{ padding:0 16px; max-width:900px; margin:0 auto; }
 .link-btn{ display:block; text-align:center; text-decoration:none; }
 .small-log{ font-size:.8rem; color:var(--muted); white-space:pre-line; }
 .app-header{ padding-top:calc(12px + var(--safe-top)); }
+
+/* Produktbilder */
+.card-body{ display:flex; gap:12px; align-items:flex-start; }
+.card-main{ flex:1; min-width:0; }
+.thumb{ flex:0 0 72px; width:72px; height:72px; border-radius:10px; background:#fff; object-fit:contain; margin-top:6px; }
+.thumb.ph{ display:flex; align-items:center; justify-content:center; background:#0f0f0f; border:1px solid var(--border); font-size:1.9rem; }
+.detail-img{ display:block; width:100%; max-height:240px; object-fit:contain; background:#fff; border-radius:12px; margin:6px 0 10px; }
+
+/* Einkaufszettel */
+.zettel{ padding-top:4px; }
+.segmented{ display:grid; grid-template-columns:1fr 1fr; background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:4px; gap:4px; margin:4px 0 14px; }
+.segmented button{ background:none; border:none; color:var(--muted); padding:10px; border-radius:9px; font-weight:700; cursor:pointer; }
+.segmented button.active{ background:var(--accent); color:#000; }
+.add-row{ display:flex; gap:8px; }
+.add-row input{ flex:1; padding:12px; border-radius:10px; border:1px solid var(--border); background:#0f0f0f; color:var(--text); font:inherit; }
+.add-row .btn{ padding:10px 18px; font-size:1.3rem; }
+.einkauf{ list-style:none; padding:0; margin:0 0 12px; display:flex; flex-direction:column; gap:6px; }
+.einkauf li{ display:flex; align-items:center; gap:12px; background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:10px 12px; }
+.einkauf input[type=checkbox]{ width:24px; height:24px; accent-color:var(--ok); flex:0 0 auto; }
+.einkauf .txt{ flex:1; min-width:0; }
+.einkauf .txt small{ display:block; color:var(--muted); font-size:.78rem; margin-top:2px; }
+.einkauf li.done .txt > span{ text-decoration:line-through; color:var(--muted); }
+.einkauf li.done{ opacity:.65; }
+.einkauf .del{ background:none; border:none; color:var(--muted); font-size:1.2rem; cursor:pointer; padding:4px 6px; }
+.week-nav{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px; }
+.week-nav .btn{ font-size:1.3rem; padding:6px 16px; }
+.week-title{ text-align:center; font-weight:700; }
+.linkish{ background:none; border:none; color:var(--accent); font-size:.8rem; cursor:pointer; padding:2px; }
+.days{ display:flex; flex-direction:column; gap:8px; }
+.day{ background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:10px 12px; }
+.day.today{ border-color:var(--accent); }
+.day label{ display:flex; justify-content:space-between; font-size:.85rem; color:var(--muted); margin-bottom:6px; font-weight:700; }
+.day textarea{ width:100%; min-height:44px; resize:vertical; padding:9px 10px; border-radius:9px; border:1px solid var(--border); background:#0f0f0f; color:var(--text); font:inherit; }
+.card-main .valid{ display:block; margin:3px 0 0; }

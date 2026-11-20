@@ -96,6 +96,9 @@ export function normalizeOffer(o, store) {
     oldPrice: oldPrice && price != null && oldPrice > price ? oldPrice : null,
     referencePrice: num(o.referencePrice),
     unit: o.unit?.shortName || o.unit?.name || "",
+    // Produktbild vom marktguru-CDN (Muster am 20.11.2026 geprüft)
+    image: o.images?.count > 0 && o.id != null ? `https://mg2de.b-cdn.net/api/v1/offers/${o.id}/images/default/0/small.webp` : null,
+    imageLarge: o.images?.count > 0 && o.id != null ? `https://mg2de.b-cdn.net/api/v1/offers/${o.id}/images/default/0/medium.webp` : null,
     from: vd.from || null,
     to: vd.to || null,
   };
