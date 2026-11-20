@@ -1,0 +1,9 @@
+{
+  "name": "einkaufswagen",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "update": "node scripts/update.mjs",
+    "test": "node --test test/*.test.js"
+  }
+}

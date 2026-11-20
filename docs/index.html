@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#121212" />
+  <title>Einkaufswagen</title>
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Angebote" />
+  <link rel="apple-touch-icon" href="icon-180.png" />
+  <link rel="icon" href="icon-192.png" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="stylesheet" href="css/app.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="title-wrap">
+      <h1>Einkaufswagen</h1>
+      <div id="subtitle" class="subtitle">Noch keine Angebote geladen</div>
+    </div>
+    <button id="btn-refresh" class="btn btn-refresh" type="button" aria-label="Angebote aktualisieren">
+      <span class="refresh-icon" aria-hidden="true">⟳</span><span class="refresh-label" id="refresh-label">Aktualisieren</span>
+    </button>
+  </header>
+
+  <nav id="store-chips" class="chips" aria-label="Markt wählen"></nav>
+
+  <div id="toolbar" class="toolbar">
+    <input id="search" type="search" placeholder="Produkt suchen …" autocomplete="off" />
+    <div class="toolbar-row">
+      <select id="filter-category" aria-label="Kategorie"></select>
+      <select id="sort" aria-label="Sortierung">
+        <option value="name">Name</option>
+        <option value="category">Kategorie</option>
+        <option value="discount">Rabatt</option>
+        <option value="next">Nächstes Angebot</option>
+      </select>
+    </div>
+  </div>
+
+  <main id="main">
+    <div id="list-info" class="list-info"></div>
+    <div id="list" class="list"></div>
+    <button id="btn-more" class="btn btn-secondary btn-more" type="button" hidden>Weitere anzeigen</button>
+
+    <section id="settings" class="settings" hidden>
+      <h2>Mehr</h2>
+
+      <div class="card-panel">
+        <h3>Datenbank</h3>
+        <div id="stats" class="stats"></div>
+        <div id="run-log" class="stats small-log"></div>
+      </div>
+
+      <div class="card-panel">
+        <h3>„Aktualisieren“-Knopf freischalten</h3>
+        <p class="hint">Die Angebote werden jeden Morgen automatisch geladen. Damit der Knopf oben zusätzlich sofort einen Abruf starten kann, braucht die App einmalig einen GitHub-Zugangsschlüssel (Token). Er bleibt nur auf diesem Gerät gespeichert. Anleitung: siehe README im Repository.</p>
+        <label class="field"><span>GitHub-Token</span><input id="set-token" type="password" autocomplete="off" placeholder="github_pat_…" /></label>
+        <div class="btn-col">
+          <button id="btn-token-save" class="btn btn-secondary" type="button">Token speichern</button>
+          <a id="link-token" class="btn btn-secondary link-btn" target="_blank" rel="noopener">Token bei GitHub erstellen ↗</a>
+        </div>
+      </div>
+
+      <div class="card-panel">
+        <h3>Daten der alten Website übernehmen</h3>
+        <p class="hint">Exportiere auf deiner alten Seite mit „Einträge exportieren (CSV)“. Lade die Datei dann bei GitHub in den Ordner <b>import</b> hoch. Im Dateinamen muss der Markt stehen, z. B. <i>edeka_angebote….csv</i> oder <i>aldi_angebote….csv</i>. Nach ca. 2 Minuten ist die Historie in der App.</p>
+        <a id="link-upload" class="btn btn-secondary link-btn" target="_blank" rel="noopener">CSV bei GitHub hochladen ↗</a>
+      </div>
+
+      <div class="card-panel">
+        <h3>Links</h3>
+        <div class="btn-col">
+          <a id="link-actions" class="btn btn-secondary link-btn" target="_blank" rel="noopener">Abrufe bei GitHub ansehen ↗</a>
+          <a id="link-config" class="btn btn-secondary link-btn" target="_blank" rel="noopener">PLZ / Märkte ändern (config.json) ↗</a>
+        </div>
+      </div>
+
+      <p class="hint small">Angebotsdaten: marktguru.de (Prospekt-Angebote der Ketten für deine PLZ). Merkliste und eigene Kategorien werden nur auf diesem Gerät gespeichert. Vorhersage: Median der Abstände zwischen den bisherigen Aktionen.</p>
+    </section>
+  </main>
+
+  <nav class="bottom-nav" id="bottom-nav">
+    <button data-view="week" class="active" type="button"><span>🛒</span>Diese Woche</button>
+    <button data-view="soon" type="button"><span>⏰</span>Bald wieder</button>
+    <button data-view="all" type="button"><span>📋</span>Alle</button>
+    <button data-view="fav" type="button"><span>★</span>Merkliste</button>
+    <button data-view="settings" type="button"><span>⚙</span>Mehr</button>
+  </nav>
+
+  <!-- Fortschritt beim Aktualisieren -->
+  <div id="progress" class="overlay" hidden>
+    <div class="progress-box">
+      <h2 id="progress-title">Angebote werden geladen …</h2>
+      <div class="bar"><div id="progress-bar"></div></div>
+      <div id="progress-text" class="progress-text"></div>
+      <button id="btn-cancel" class="btn btn-secondary" type="button">Im Hintergrund weiterlaufen lassen</button>
+    </div>
+  </div>
+
+  <!-- Produkt-Details -->
+  <div id="detail" class="overlay sheet-overlay" hidden>
+    <div class="sheet" role="dialog" aria-modal="true">
+      <button class="sheet-close" type="button" data-close aria-label="Schließen">✕</button>
+      <div id="detail-body"></div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

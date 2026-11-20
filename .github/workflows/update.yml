@@ -1,0 +1,64 @@
+name: Angebote aktualisieren
+
+on:
+  # jeden Tag um 6:23 Uhr (deutsche Winterzeit) – neue Prospekte erscheinen meist So/Mo, Lidl/ALDI auch Do
+  schedule:
+    - cron: "23 5 * * *"
+  # Knopf "Run workflow" bei GitHub bzw. "Aktualisieren" in der App
+  workflow_dispatch:
+  # Code-Änderungen sofort veröffentlichen (ohne neuen Abruf)
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: angebote
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Angebote laden und CSV-Importe übernehmen
+        env:
+          SKIP_FETCH: ${{ github.event_name == 'push' && '1' || '0' }}
+          MARKTGURU_APIKEY: ${{ secrets.MARKTGURU_APIKEY }}
+          MARKTGURU_CLIENTKEY: ${{ secrets.MARKTGURU_CLIENTKEY }}
+        run: node scripts/update.mjs
+
+      - name: Datenbank speichern
+        run: |
+          git config user.name "angebote-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A docs/data import
+          if git diff --cached --quiet; then
+            echo "Keine Änderungen"
+          else
+            git commit -m "Angebote aktualisiert $(date -u +%Y-%m-%d)"
+            git push
+          fi
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+      - id: deploy
+        uses: actions/deploy-pages@v4
+
+      - name: Fehler beim Abruf melden
+        run: |
+          ERR=$(node -e "console.log(require('./docs/data/meta.json').lastError || '')")
+          if [ -n "$ERR" ]; then echo "::error::$ERR"; exit 1; fi
