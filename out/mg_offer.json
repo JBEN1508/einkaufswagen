@@ -1,0 +1,180 @@
+[
+ {
+  "brand": {
+   "uniqueName": "meggle",
+   "indexOffer": true,
+   "indexLeaflet": false,
+   "id": 118049,
+   "name": "Meggle",
+   "industryId": 1009
+  },
+  "advertisers": [
+   {
+    "uniqueName": "kaufland",
+    "indexOffer": true,
+    "indexLeaflet": true,
+    "id": "retailers/126654",
+    "name": "Kaufland",
+    "industryId": 1009
+   }
+  ],
+  "categories": [
+   {
+    "uniqueName": null,
+    "indexOffer": false,
+    "indexLeaflet": false,
+    "id": 166,
+    "name": "Butter",
+    "description": "Zum Kochen, Braten oder Backen sind Butter, Margarine und Fett unersetzliche Zutaten. Ein breites Sortiment bieten zum Beispiel Hersteller wie [Meggle](https://www.marktguru.de/b/meggle), [Rama](https://www.marktguru.de/b/rama) und [Kerrygold](https://www.marktguru.de/b/kerrygold). Diese sind unter anderem erhältlich bei [nah & gut](https://www.marktguru.de/r/nah-gut) oder [Globus](https://www.marktguru.de/r/globus).",
+    "parentId": 107
+   }
+  ],
+  "id": 25765802,
+  "description": "Joghurt- oder Feine Butter, gekühlt je 250-g-Stück",
+  "volume": 0.25,
+  "quantity": 1,
+  "isMultiProduct": true,
+  "price": 1.29,
+  "oldPrice": null,
+  "referencePrice": 5.16,
+  "requiresLoyalityMembership": false,
+  "leafletFlightId": 301852,
+  "validityDates": [
+   {
+    "from": "2026-11-18T23:00:00Z",
+    "to": "2026-11-21T18:00:59Z"
+   }
+  ],
+  "externalId": null,
+  "externalTrackingUrls": [
+   "https://ad.doubleclick.net/ddm/trackimp/N1106503.2671411MARKGURUDE/B26240841.309225179;dc_pre=CIaFzIm8jI0DFZ2L_Qcd5l8Plg;dc_trk_aid=502197466;dc_trk_cid=154816736;ord={{mg-timestamp}};dc_lat=;dc_rdid=;tag_for_child_directed_treatment=;tfua=;gdpr=${GDPR};gdpr_consent=${GDPR_CONSENT_755};ltd=;dc_tdv=1"
+  ],
+  "externalTrackings": [
+   {
+    "type": "click",
+    "url": "https://ad.doubleclick.net/ddm/trackimp/N1106503.2671411MARKGURUDE/B26240841.309225179;dc_pre=CIaFzIm8jI0DFZ2L_Qcd5l8Plg;dc_trk_aid=502197466;dc_trk_cid=154816736;ord={{mg-timestamp}};dc_lat=;dc_rdid=;tag_for_child_directed_treatment=;tfua=;gdpr=${GDPR};gdpr_consent=${GDPR_CONSENT_755};ltd=;dc_tdv=1",
+    "ugpctfet": 100
+   }
+  ],
+  "externalUrl": "https://filiale.kaufland.de/angebote/uebersicht.html?kloffer-articleID=00603282&pdp=true",
+  "trackFlightImpression": null,
+  "type": "standard",
+  "industries": [
+   {
+    "id": 1009,
+    "name": "Supermarkt"
+   }
+  ],
+  "product": {
+   "id": 50004,
+   "name": "Butter",
+   "description": null
+  },
+  "unit": {
+   "shortName": "kg",
+   "id": 2,
+   "name": "Kilogramm"
+  },
+  "images": {
+   "count": 1,
+   "isCdnSuccessfullyPurged": null,
+   "metadata": [
+    {
+     "aspectRatio": 1.3333333333333333,
+     "width": 1,
+     "height": 0.75
+    }
+   ]
+  },
+  "imageType": "offer"
+ },
+ {
+  "brand": {
+   "uniqueName": "landliebe",
+   "indexOffer": true,
+   "indexLeaflet": false,
+   "id": 116286,
+   "name": "Landliebe",
+   "industryId": 1009
+  },
+  "advertisers": [
+   {
+    "uniqueName": "rewe",
+    "indexOffer": true,
+    "indexLeaflet": true,
+    "id": "retailers/126802",
+    "name": "REWE",
+    "industryId": 1009
+   }
+  ],
+  "categories": [
+   {
+    "uniqueName": null,
+    "indexOffer": false,
+    "indexLeaflet": false,
+    "id": 166,
+    "name": "Butter",
+    "description": "Zum Kochen, Braten oder Backen sind Butter, Margarine und Fett unersetzliche Zutaten. Ein breites Sortiment bieten zum Beispiel Hersteller wie [Meggle](https://www.marktguru.de/b/meggle), [Rama](https://www.marktguru.de/b/rama) und [Kerrygold](https://www.marktguru.de/b/kerrygold). Diese sind unter anderem erhältlich bei [nah & gut](https://www.marktguru.de/r/nah-gut) oder [Globus](https://www.marktguru.de/r/globus).",
+    "parentId": 107
+   }
+  ],
+  "id": 25753267,
+  "description": "je 250-g-Pckg.",
+  "volume": 0.25,
+  "quantity": 1,
+  "isMultiProduct": false,
+  "price": 1.29,
+  "oldPrice": null,
+  "referencePrice": 5.16,
+  "requiresLoyalityMembership": false,
+  "leafletFlightId": 301717,
+  "validityDates": [
+   {
+    "from": "2026-11-15T23:00:00Z",
+    "to": "2026-11-21T22:59:59Z"
+   }
+  ],
+  "externalId": null,
+  "externalTrackingUrls": [
+   "https://servedby.flashtalking.com/imp/2/302017;10367284;201;pixel;SevenOneMediaDE;nnCPSevenOneMediaDEKaufDAMeinProspektA4CLEProspektnnAdgapId01984610141314295001/?gdpr=${GDPR}&gdpr_consent=${GDPR_CONSENT_78}&pbMethods=&cachebuster=[CACHEBUSTER]%22"
+  ],
+  "externalTrackings": [
+   {
+    "type": "click",
+    "url": "https://servedby.flashtalking.com/imp/2/302017;10367284;201;pixel;SevenOneMediaDE;nnCPSevenOneMediaDEKaufDAMeinProspektA4CLEProspektnnAdgapId01984610141314295001/?gdpr=${GDPR}&gdpr_consent=${GDPR_CONSENT_78}&pbMethods=&cachebuster=[CACHEBUSTER]%22",
+    "ugpctfet": 100
+   }
+  ],
+  "externalUrl": null,
+  "trackFlightImpression": null,
+  "type": "standard",
+  "industries": [
+   {
+    "id": 1009,
+    "name": "Supermarkt"
+   }
+  ],
+  "product": {
+   "id": 331895,
+   "name": "Butter",
+   "description": "~twxde~ ~twxsde~ ~twxbw~ ~twxswb~"
+  },
+  "unit": {
+   "shortName": "kg",
+   "id": 2,
+   "name": "Kilogramm"
+  },
+  "images": {
+   "count": 1,
+   "isCdnSuccessfullyPurged": null,
+   "metadata": [
+    {
+     "aspectRatio": 1.1911764705882353,
+     "width": 1,
+     "height": 0.8395061728395061
+    }
+   ]
+  },
+  "imageType": "offer"
+ }
+]

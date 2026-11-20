@@ -1,0 +1,5 @@
+page imgs: https://www.marktguru.de/assets/icons/maskable_icon_x192.png
+200 image/webp https://mg2de.b-cdn.net/api/v1/offers/25765802/images/default/0/small.webp
+200 image/webp https://mg2de.b-cdn.net/api/v1/offers/25765802/images/default/0/medium.webp
+200 image/jpeg https://mg2de.b-cdn.net/api/v1/offers/25765802/images/default/0/small.jpg
+200 image/webp https://api.marktguru.de/api/v1/offers/25765802/images/default/0/small.webp
