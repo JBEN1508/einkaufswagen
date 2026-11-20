@@ -1,12 +1,15 @@
 name: probe
 on: { push: { branches: [probe] } }
+permissions: { contents: write }
 jobs:
   p:
     runs-on: ubuntu-latest
+    if: github.actor != 'github-actions[bot]'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
       - run: node probe.mjs
-      - uses: actions/upload-artifact@v4
-        with: { name: probe, path: out, retention-days: 1 }
+      - run: |
+          git config user.name bot; git config user.email b@b.b
+          git add out && git commit -m "probe data" && git push
