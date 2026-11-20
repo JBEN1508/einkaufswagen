@@ -1,0 +1,2 @@
+200 image/webp 15940 https://mg2de.b-cdn.net/api/v1/offers/25773822/images/default/0/small.webp
+200 image/jpeg 14642 https://s7g10.scene7.com/is/image/aldinord/0331_47_2026_tk_blaetterteigschnecke_1_kg_2_on_comp?wid=240
