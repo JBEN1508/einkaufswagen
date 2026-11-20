@@ -1,0 +1,314 @@
+0Z Current runner version: '2.338.2'
+##[group]Runner Image Provisioner
+Hosted Compute Agent
+Version: 20261103.629
+Commit: 15dbd9ccb5dbf34fae002b6ed1a2670f52df37bc
+Build Date: 2026-11-03T17:26:59Z
+Worker ID: {41d538e7-7ebc-4ab2-82b5-0f3b5d39894f}
+Region: centralus
+Cloud: Azure
+##[endgroup]
+##[group]Operating System
+Ubuntu
+26.04.1
+LTS
+##[endgroup]
+##[group]Runner Image
+Image: ubuntu-26.04
+Version: 20261111.196.1
+Included Software: https://github.com/actions/runner-images/blob/ubuntu26/20261111.196/images/ubuntu/Ubuntu2604-Readme.md
+Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu26%2F20261111.196
+##[endgroup]
+##[group]GITHUB_TOKEN Permissions
+Contents: read
+Metadata: read
+Packages: read
+##[endgroup]
+Secret source: Actions
+Cache mode: write
+Prepare workflow directory
+Prepare all required actions
+Getting action download info
+Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+Download action repository 'actions/setup-node@v4' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+Complete job name: p
+3Z ##[group]Run actions/checkout@v4
+with:
+  repository: JBEN1508/einkaufswagen
+  token: ***
+  ssh-strict: true
+  ssh-user: git
+  persist-credentials: true
+  clean: true
+  sparse-checkout-cone-mode: true
+  fetch-depth: 1
+  fetch-tags: false
+  show-progress: true
+  lfs: false
+  submodules: false
+  set-safe-directory: true
+  allow-unsafe-pr-checkout: false
+##[endgroup]
+Syncing repository: JBEN1508/einkaufswagen
+##[group]Getting Git version info
+Working directory is '/home/runner/work/einkaufswagen/einkaufswagen'
+[command]/usr/bin/git version
+git version 2.56.1
+##[endgroup]
+Temporarily overriding HOME='/home/runner/work/_temp/dacff43c-4bbd-49b1-b3e0-2e84807a3b1d' before making global git config changes
+Adding repository directory to the temporary git global config as a safe directory
+[command]/usr/bin/git config --global --add safe.directory /home/runner/work/einkaufswagen/einkaufswagen
+Deleting the contents of '/home/runner/work/einkaufswagen/einkaufswagen'
+##[group]Initializing the repository
+[command]/usr/bin/git init /home/runner/work/einkaufswagen/einkaufswagen
+hint: Using 'master' as the name for the initial branch. This default branch name
+hint: will change to "main" in Git 3.0. To configure the initial branch name
+hint: to use in all of your new repositories, which will suppress this warning,
+hint: call:
+hint:
+hint: 	git config --global init.defaultBranch <name>
+hint:
+hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+hint: 'development'. The just-created branch can be renamed via this command:
+hint:
+hint: 	git branch -m <name>
+hint:
+hint: Disable this message with "git config set advice.defaultBranchName false"
+Initialized empty Git repository in /home/runner/work/einkaufswagen/einkaufswagen/.git/
+[command]/usr/bin/git remote add origin https://github.com/JBEN1508/einkaufswagen
+##[endgroup]
+##[group]Disabling automatic garbage collection
+[command]/usr/bin/git config --local gc.auto 0
+##[endgroup]
+##[group]Setting up auth
+[command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+[command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+[command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+[command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+[command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+[command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+[command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+##[endgroup]
+##[group]Fetching the repository
+[command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +11cfdffc2dc955f81d0a2ded54c1382663b8a9bd:refs/remotes/origin/probe
+From https://github.com/JBEN1508/einkaufswagen
+ * [new ref]         11cfdffc2dc955f81d0a2ded54c1382663b8a9bd -> origin/probe
+##[endgroup]
+##[group]Determining the checkout info
+##[endgroup]
+[command]/usr/bin/git sparse-checkout disable
+[command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+##[group]Checking out the ref
+[command]/usr/bin/git checkout --progress --force -B probe refs/remotes/origin/probe
+Switched to a new branch 'probe'
+branch 'probe' set up to track 'origin/probe'.
+##[endgroup]
+[command]/usr/bin/git log -1 --format=%H
+11cfdffc2dc955f81d0a2ded54c1382663b8a9bd
+3Z ##[group]Run actions/setup-node@v4
+with:
+  node-version: 22
+  always-auth: false
+  check-latest: false
+  token: ***
+##[endgroup]
+(node:2178) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+Found in cache @ /opt/hostedtoolcache/node/22.23.4/x64
+##[group]Environment details
+node: v22.23.4
+npm: 10.9.9
+yarn: 1.22.22
+##[endgroup]
+9Z ##[group]Run node probe.mjs
+[36;1mnode probe.mjs[0m
+shell: /usr/bin/bash -e {0}
+##[endgroup]
+apiData type array 1 [ 'OFFER_GET' ]
+res keys [ 'algoliaDataMap', 'categories', 'weekSwitchPer' ]
+RES categories [{"title":"Aktion Mo. 16.11.","shortTitle":"Ab Mo. 16.11.","startDate":"2026-11-16","goLiveDate":"2026-11-08","endDate":"2026-11-21","infoboxText":{"richTextContent":[],"cleanText":""},"content":[{"title":"Frische-Aktion: Obst & Gemüse","productIds":["10409010002","10340130002","62790000002","10388860003","62940000001","10224240001","67720000002","62060000001","85300000001","1029521","6258","61510000001","6224","61600000006","10292540001","61360000001"],"hasHeroProduct":false,"hideInSlider":false,"teaserTitle":"Frische-Aktion: Obst & Gemüse","teaserImageAltText":"Frische-Aktion: Obst & Gemüse","teaserTiles":{"@nodes":[]},"teaserImage":"https://prd.an-pcm.com/dam/non-product-assets/de/Digital/magnolia-website/wochengeschaeft/2026/kw47/navislider/KW47_2026_Navislider_Frische_Mo_V1_ki.jpg","informationText":{"richTextContent":[],"cleanText":""},"teaserImageTitle":null,"type":"category"},{"title":"Frische-Aktion: Fleisch, Fisch & Gebäck","productIds":["81350000002","1038536","10035250001","1045872","1044701","1023086","37000000002","10318060001","1044430","1044173"],"hasHeroProduct":false,"hideInSlider":false,"teaserTitle":"Frische-Aktion: Fleisch, Fisch & Gebäck","teaserImageAltText":"Frische-Aktion: Fleisch, Fisch & Gebäck","teaserTiles":{"@nodes":[]},"teaserImage":"https://prd.an-pcm.com/dam/non-product-assets/de/Digital/magnolia-website/wochengeschaeft/2026/kw47/navislider/KW47_2026_Navislider_Fleisch_Mo_V1.jpg","informationText":{"richTextContent":[],"cleanText":""},"teaserI
+RES weekSwitchPer "Sunday"
+items 266
+[
+ {
+  "longDescription": "Sorten:\n\n * Spinat-Käse\n * Feta-Myzithra-Käse",
+  "isAvailable": true,
+  "brandName": "LYTTOS",
+  "isDepositProduct": false,
+  "isRecall": false,
+  "currentPrice": {
+   "priceValue": 3.79,
+   "basePrice": [
+    {
+     "basePriceValue": 3.79,
+     "basePriceScale": "kg"
+    }
+   ],
+   "validFrom": 1794783600,
+   "validUntil": 1795301999
+  },
+  "drainedWeightValue": 0,
+  "shortDescription": "Original griechisch; gefüllter Blätterteig; verschiedene Sorten",
+  "isBiocidalProduct": false,
+  "productSlug": "schnecke-331",
+  "depositValue": 0,
+  "promotionPrices": [
+   {
+    "validFrom": 1794783600,
+    "validUntil": 1795301999,
+    "priceValue": 3.79,
+    "basePrice": [
+     {
+      "basePriceValue": 3.79,
+      "basePriceScale": "kg"
+     }
+    ],
+    "validFromLocalDate": "2026-11-16",
+    "validUntilLocalDate": "2026-11-21"
+   }
+  ],
+  "isDrainedWeight": false,
+  "isComingSoon": false,
+  "categoryIDs": [
+   "Angebote"
+  ],
+  "assets": [
+   {
+    "type": "primary",
+    "url": "https://s7g10.scene7.com/is/image/aldinord/0331_47_2026_tk_blaetterteigschnecke_1_kg_2_on_comp"
+   },
+   {
+    "type": "gallery",
+    "url": "https://s7g10.scene7.com/is/image/aldinord/0331_47_2026_tk_blaetterteigschnecke_1_kg_2_on"
+   },
+   {
+    "type": "gallery",
+    "url": "https://s7g10.scene7.com/is/image/aldinord/0331_47_2026_tk_blaetterteigschnecke_1_kg_1_on"
+   },
+   {
+    "type": "seal",
+    "url": "https://s7g10.scene7.com/is/image/aldinord/Vegetarisch_Logo_160126_094645_1"
+   }
+  ],
+  "salesUnit": "1-kg-Packung",
+  "name": "Schnecke",
+  "mainCategoryID": "Angebote",
+  "legalInformation": [
+   {
+    "type": "footnote1",
+    "legalText": "true",
+    "asterixEnabled": false
+   }
+  ],
+  "objectID": "331"
+ },
+ {
+  "longDescription": "Sorten:\n\n * Käse\n * Spinat-Käse",
+  "isAvailable": true,
+  "brandName": "LYTTOS",
+  "isDepositProduct": false,
+  "isRecall": false,
+  "currentPrice": {
+   "priceValue": 2.99,
+   "basePrice": [
+    {
+     "basePriceValue": 2.99,
+     "basePriceScale": "kg"
+    }
+   ],
+   "validFrom": 1794783600,
+   "validUntil": 1795301999
+  },
+  "drainedWeightValue": 0,
+  "shortDescription": "Original griechisch; Teigrollen mit Füllung; verschiedene Sorten",
+  "isBiocidalProduct": false,
+  "productSlug": "mini-rollen-399",
+  "depositValue": 0,
+  "promotionPrices": [
+   {
+    "validFrom": 1794783600,
+    "validUntil": 1795301999,
+    "priceValue": 2.99,
+    "basePrice": [
+     {
+      "basePriceValue": 2.99,
+      "basePriceScale": "kg"
+     }
+    ],
+    "validFromLocalDate": "2026-11-16",
+    "validUntilLocalDate": "2026-11-21"
+   }
+  ],
+  "isDrainedWeight": false,
+  "isComingSoon": false,
+  "categoryIDs": [
+   "Angebote"
+  ],
+  "assets": [
+   {
+    "type": "primary",
+    "url": "https://s7g10.scene7.com/is/image/aldinord/0399_47_2026_tk_original_griechische_mini_rollen_2_on_comp"
+   },
+   {
+    "type": "gallery",
+    "url": "https://s7g10.scene7.com/is/image/aldinord/0399_47_2026_tk_original_griechische_mini_rollen_2_on"
+   
+{
+  longDescription: 151,
+  isAvailable: 266,
+  brandName: 231,
+  isDepositProduct: 266,
+  isRecall: 266,
+  currentPrice: 266,
+  drainedWeightValue: 266,
+  shortDescription: 261,
+  isBiocidalProduct: 266,
+  productSlug: 266,
+  depositValue: 266,
+  promotionPrices: 266,
+  isDrainedWeight: 266,
+  isComingSoon: 266,
+  categoryIDs: 266,
+  assets: 266,
+  salesUnit: 266,
+  name: 266,
+  mainCategoryID: 266,
+  legalInformation: 266,
+  objectID: 266,
+  drainedWeightUnit: 7,
+  additionalAttributes: 44,
+  hierarchicalCategories: 23
+}
+{
+  Angebote: 263,
+  'frisches-obst-gemuese': 20,
+  'frischer-fisch': 1,
+  ' GOLDEN SEAFOOD': 1,
+  'eisbecher-toppings': 1,
+  '  Markenprodukte': 1,
+  Dips: 1,
+  ' Saucen & Dressings': 1,
+  ' Markenprodukte': 1,
+  fruchtgummi: 1
+}
+other api keys: OFFER_GET
+FAMILA_B64_START
+9Z Post job cleanup.
+(node:2225) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+0Z Post job cleanup.
+[command]/usr/bin/git version
+git version 2.56.1
+Temporarily overriding HOME='/home/runner/work/_temp/27061c89-3f18-402a-b5f0-215cf6ebc647' before making global git config changes
+Adding repository directory to the temporary git global config as a safe directory
+[command]/usr/bin/git config --global --add safe.directory /home/runner/work/einkaufswagen/einkaufswagen
+[command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+[command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+[command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+http.https://github.com/.extraheader
+[command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+[command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+[command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+[command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+6Z Cleaning up orphan processes
+##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
