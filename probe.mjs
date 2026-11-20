@@ -1,20 +1,16 @@
-const UA={"User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36","Accept-Language":"de-DE,de;q=0.9","Accept":"text/html,application/xhtml+xml,*/*"};
-async function aldi(){
-  const r=await fetch("https://www.aldi-nord.de/angebote.html",{headers:UA}); console.log("ALDI status",r.status);
-  const h=await r.text(); console.log("ALDI len",h.length);
-  const m=h.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);
-  if(!m){ console.log("no NEXT_DATA; scripts:", [...h.matchAll(/<script[^>]*(id|type)="([^"]+)"/g)].map(x=>x[2]).slice(0,20)); console.log(h.slice(0,1500)); return;}
-  const j=JSON.parse(m[1]);
-  const walk=(o,p,d)=>{ if(d>6||!o||typeof o!=="object")return; for(const k of Object.keys(o)){ if(/offer|apiData/i.test(k)) console.log("KEY",p+"."+k, Array.isArray(o[k])?"array "+o[k].length:typeof o[k]); walk(o[k],p+"."+k,d+1);} };
-  walk(j,"",0);
-  const s=JSON.stringify(j); const i=s.indexOf("OFFER_GET"); console.log("OFFER_GET at",i); console.log(s.slice(i,i+4000));
-}
-async function famila(){
-  const r=await fetch("https://www.famila-nordost.de/markt/neu-wulmstorf/",{headers:UA}); console.log("famila status",r.status);
-  const h=await r.text(); const links=[...new Set([...h.matchAll(/\/handzettel\/([^\/"?]+)\//g)].map(x=>x[1]))]; console.log("handzettel",links);
-  for(const l of links.slice(0,1)){
-    const u=`https://www.famila-nordost.de/handzettel/${l}/files/search/book_config.js`; const r2=await fetch(u,{headers:UA}); console.log(u,r2.status);
-    const t=await r2.text(); console.log("len",t.length); console.log(t.slice(0,6000));
-  }
-}
-await aldi().catch(e=>console.log("ALDI ERR",e)); await famila().catch(e=>console.log("famila ERR",e));
+import fs from "node:fs";
+const UA={"User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36","Accept-Language":"de-DE,de;q=0.9"};
+const h=await (await fetch("https://www.aldi-nord.de/angebote.html",{headers:UA})).text();
+const j=JSON.parse(h.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/)[1]);
+const api=JSON.parse(j.props.pageProps.apiData);
+console.log("apiData type", Array.isArray(api)?"array "+api.length:typeof api, Array.isArray(api)?api.map(x=>Array.isArray(x)?x[0]:typeof x):Object.keys(api));
+const og=(Array.isArray(api)?api:Object.entries(api)).find(x=>x[0]==="OFFER_GET");
+console.log("res keys", Object.keys(og[1].res));
+for (const [k,v] of Object.entries(og[1].res)) if(k!=="algoliaDataMap") console.log("RES",k, JSON.stringify(v).slice(0,1500));
+const items=Object.values(og[1].res.algoliaDataMap); console.log("items", items.length);
+console.log(JSON.stringify(items.slice(0,2),null,1).slice(0,3000));
+const keys={}; for(const it of items) for(const k of Object.keys(it)) keys[k]=(keys[k]||0)+1; console.log(keys);
+const cats={}; for(const it of items) for(const c of it.categoryIDs||[]) cats[c]=(cats[c]||0)+1; console.log(cats);
+console.log("other api keys:", (Array.isArray(api)?api.map(x=>x[0]):Object.keys(api)).join(","));
+const t=await (await fetch("https://www.famila-nordost.de/handzettel/famila_kw47_DJWWW/files/search/book_config.js",{headers:UA})).text();
+console.log("FAMILA_B64_START"); console.log(Buffer.from(t).toString("base64")); console.log("FAMILA_B64_END");
