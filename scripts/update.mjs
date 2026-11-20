@@ -109,6 +109,9 @@ fs.writeFileSync(META, JSON.stringify({
   lastError: fetchError,
   log,
   productCount: list.length,
+  seenAdvertisers: fetchResult
+    ? Object.entries(fetchResult.seenAdvertisers).sort((a, b) => b[1] - a[1]).slice(0, 60).map(([k, n]) => `${k}: ${n}`)
+    : meta.seenAdvertisers || [],
 }, null, 2));
 
 console.log(log.join("\n"));

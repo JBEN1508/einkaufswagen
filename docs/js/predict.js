@@ -21,6 +21,19 @@ export function weekIndexOf(date) {
   return Math.round((mondayUTC(date) - EPOCH_MONDAY) / WEEK_MS);
 }
 
+/**
+ * Wochen-Index eines Zeitpunkts aus marktguru (UTC, z. B. "2026-11-15T23:00:00Z"),
+ * gerechnet in deutscher Zeit. Ein Start am Sonntag zählt zur folgenden Woche
+ * (sonntags sind die Märkte zu – das Angebot gilt ab Montag).
+ */
+export function berlinWeekIndex(iso) {
+  const ymd = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Berlin", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(iso));
+  const [y, m, d] = ymd.split("-").map(Number);
+  const date = new Date(y, m - 1, d);
+  if (date.getDay() === 0) date.setDate(date.getDate() + 1);
+  return weekIndexOf(date);
+}
+
 export function mondayOfIndex(idx) {
   return new Date(EPOCH_MONDAY + idx * WEEK_MS);
 }

@@ -1,6 +1,6 @@
 // Datenlogik ohne Oberfläche: Angebote zusammenführen, alte CSV importieren, Backup.
 import { guessCategory, normalizeCategory } from "./categories.js";
-import { weekIndexOf, currentWeekIndex, legacyWeeksToIndexes, predictNext } from "./predict.js";
+import { currentWeekIndex, legacyWeeksToIndexes, predictNext, berlinWeekIndex } from "./predict.js";
 
 /** Vergleichsschlüssel für Produktnamen ("Milka  Alpenmilch-Schokolade" == "milka alpenmilch schokolade") */
 export function nameKey(name) {
@@ -44,16 +44,20 @@ export function mergeOffers(products, offers, now = new Date()) {
     } else if (!changed.has(id)) {
       updated++;
     }
-    const week = o.from ? weekIndexOf(new Date(o.from)) : nowIdx;
-    const entry = {
-      week, price: o.price, oldPrice: o.oldPrice,
-      savedPercent: savedPercent(o.price, o.oldPrice),
-      from: o.from, to: o.to, unit: o.unit || "", referencePrice: o.referencePrice ?? null,
-      source: "marktguru",
-    };
-    const i = p.history.findIndex((h) => h.week === week);
-    if (i === -1) p.history.push(entry);
-    else if (entry.price != null && (p.history[i].price == null || entry.price < p.history[i].price)) p.history[i] = entry;
+    // Ein Angebot kann mehrere Wochen gelten -> jede Woche eintragen (max. 6)
+    const first = o.from ? berlinWeekIndex(o.from) : nowIdx;
+    const last = o.to ? Math.max(first, berlinWeekIndex(o.to)) : first;
+    for (let week = first; week <= Math.min(last, first + 5); week++) {
+      const entry = {
+        week, price: o.price, oldPrice: o.oldPrice,
+        savedPercent: savedPercent(o.price, o.oldPrice),
+        from: o.from, to: o.to, unit: o.unit || "", referencePrice: o.referencePrice ?? null,
+        source: "marktguru",
+      };
+      const i = p.history.findIndex((h) => h.week === week);
+      if (i === -1) p.history.push(entry);
+      else if (entry.price != null && (p.history[i].price == null || p.history[i].source !== "marktguru" || entry.price < p.history[i].price)) p.history[i] = entry;
+    }
     p.history.sort((a, b) => a.week - b.week);
     p.lastSeen = new Date(now).toISOString();
     changed.set(id, p);

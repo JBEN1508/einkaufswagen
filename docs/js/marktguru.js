@@ -130,6 +130,7 @@ async function searchOnce(q, { zip, keys, limit, offset, signal, extraHeaders = 
 export async function fetchAllOffers({ zip, stores, keywords, manualKeys, onProgress, signal, concurrency = 4, extraHeaders = {} }) {
   let keys = await getKeys({ manual: manualKeys, extraHeaders });
   const byId = new Map();
+  const seenAdvertisers = {}; // zur Kontrolle: welche Ketten liefert marktguru für die PLZ?
   const errors = [];
   let done = 0;
   let authFailed = false;
@@ -151,6 +152,10 @@ export async function fetchAllOffers({ zip, stores, keywords, manualKeys, onProg
         } else throw e;
       }
       for (const o of results) {
+        for (const a of o.advertisers || []) {
+          const k = `${a.name} [${a.uniqueName}]`;
+          seenAdvertisers[k] = (seenAdvertisers[k] || 0) + 1;
+        }
         const store = storeOfOffer(o, stores);
         if (!store || o.id == null) continue;
         if (!byId.has(o.id)) byId.set(o.id, normalizeOffer(o, store));
@@ -182,5 +187,5 @@ export async function fetchAllOffers({ zip, stores, keywords, manualKeys, onProg
   if (byId.size === 0 && errors.length) {
     throw new Error(`Keine Angebote geladen. Erster Fehler: ${errors[0]}`);
   }
-  return { offers: [...byId.values()], errors, keySource: keys.source };
+  return { offers: [...byId.values()], errors, keySource: keys.source, seenAdvertisers };
 }

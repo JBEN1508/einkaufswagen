@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  weekIndexOf, isoWeekOfIndex, indexFromIsoWeek, actionStarts, predictNext, legacyWeeksToIndexes, formatWeek,
+  weekIndexOf, berlinWeekIndex, isoWeekOfIndex, indexFromIsoWeek, actionStarts, predictNext, legacyWeeksToIndexes, formatWeek,
 } from "../docs/js/predict.js";
 import { extractKeys, storeOfOffer, normalizeOffer } from "../docs/js/marktguru.js";
 import { mergeOffers, parseLegacyCSV, describe, guessStoreFromFilename } from "../docs/js/data.js";
@@ -116,4 +116,13 @@ test("Kategorien raten", () => {
   assert.equal(guessCategory("Krombacher Pils"), "Getränke");
   assert.equal(guessCategory("Bananen"), "Obst&Gemüse");
   assert.equal(guessCategory("Ariel Waschmittel"), "Haushalt");
+});
+
+test("marktguru-Zeiten (UTC) werden in deutscher Zeit gerechnet", () => {
+  assert.equal(isoWeekOfIndex(berlinWeekIndex("2026-11-15T23:00:00Z")).week, 47); // Mo 16.11. 00:00
+  assert.equal(isoWeekOfIndex(berlinWeekIndex("2026-11-14T23:00:00Z")).week, 47); // So 15.11. -> zählt ab Montag
+  assert.equal(isoWeekOfIndex(berlinWeekIndex("2026-11-21T22:59:59Z")).week, 47);
+  const products = new Map();
+  mergeOffers(products, [{ store: "lidl", name: "Test", price: 1, oldPrice: 2, from: "2026-11-07T23:00:00Z", to: "2026-11-21T22:59:59Z" }]);
+  assert.deepEqual([...products.values()][0].history.map((h) => isoWeekOfIndex(h.week).week), [46, 47]);
 });
