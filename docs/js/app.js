@@ -1,6 +1,6 @@
 // Einkaufswagen – Web-App (GitHub-Pages-Version)
 //
-// Die Angebote lädt GitHub jeden Morgen automatisch (scripts/update.mjs) und legt
+// Die Angebote lädt GitHub jeden Montag automatisch (scripts/update.mjs) und legt
 // sie in data/products.json ab. Diese Seite liest nur diese Datei.
 // Merkliste und geänderte Kategorien werden auf dem Gerät gespeichert (localStorage).
 import { STORES, storeById } from "./marktguru.js";
@@ -80,7 +80,7 @@ async function refresh() {
       render();
       toast(state.meta.lastUpdate && state.meta.lastUpdate !== before
         ? "Neue Angebote geladen"
-        : "Du hast schon den neuesten Stand. Die Angebote werden jeden Morgen automatisch geladen. Für einen Sofort-Abruf unter „Mehr“ den Token eintragen.", false, 8000);
+        : "Du hast schon den neuesten Stand. Die Angebote werden jeden Montag automatisch geladen. Für einen Sofort-Abruf unter „Mehr“ den Token eintragen.", false, 8000);
       return;
     }
     await runWorkflow();
@@ -158,7 +158,6 @@ function buildStaticUI() {
     if (!b) return;
     state.view = b.dataset.view;
     state.limit = 150;
-    if (state.view === "soon") { state.sort = "next"; $("sort").value = "next"; }
     window.scrollTo({ top: 0 });
     render();
   });
@@ -204,8 +203,23 @@ function render() {
   const enabled = state.meta.stores || STORES.map((s) => s.id);
   const withInfo = [...state.products.values()].filter((p) => enabled.includes(p.store)).map((p) => ({ p, d: describe(p, nowIdx) }));
   let base;
-  if (state.view === "week") base = withInfo.filter(({ d }) => d.current || (d.upcoming && d.upcoming.week === nowIdx + 1));
-  else if (state.view === "soon") base = withInfo.filter(({ d }) => d.pred.nextIdx != null && !d.current && d.pred.weeksUntil <= 4 && d.pred.status !== "overdue");
+  const nextIdx = nowIdx + 1;
+  if (state.view === "week") base = withInfo.filter(({ d }) => d.current);
+  else if (state.view === "next") {
+    // 1) voraussichtlich: Vorhersage trifft genau nächste Woche
+    // 2) möglich: nächste Woche liegt im wahrscheinlichen Zeitraum
+    // 3) schon angekündigt (Prospekt für nächste Woche ist schon da)
+    base = [];
+    for (const x of withInfo) {
+      const { d } = x;
+      const pr = d.pred;
+      if (d.upcoming && d.upcoming.week === nextIdx) x.group = 3;
+      else if (pr.nextIdx === nextIdx && pr.status !== "overdue") x.group = 1;
+      else if (pr.nextIdx != null && pr.status !== "overdue" && pr.status !== "active" && pr.rangeLo <= nextIdx && nextIdx <= pr.rangeHi) x.group = 2;
+      else continue;
+      base.push(x);
+    }
+  }
   else if (state.view === "fav") base = withInfo.filter(({ p }) => p.favorite);
   else base = withInfo;
 
@@ -226,19 +240,20 @@ function render() {
     next: (a, b) => (a.d.pred.nextIdx ?? 1e9) - (b.d.pred.nextIdx ?? 1e9) || coll.compare(a.p.name, b.p.name),
   };
   items.sort(sorters[state.sort] || sorters.name);
+  if (state.view === "next") items.sort((a, b) => a.group - b.group); // Abschnitte zusammenhalten
 
-  const viewNames = { week: "Diese & nächste Woche im Angebot", soon: "Kommt laut Vorhersage in den nächsten 4 Wochen", all: "Alle bekannten Produkte", fav: "Deine Merkliste" };
+  const viewNames = { week: `Diese Woche im Angebot · ${formatWeek(nowIdx)}`, next: `Nächste Woche · ${formatWeek(nextIdx)}`, all: "Alle bekannten Produkte", fav: "Deine Merkliste" };
   $("list-info").textContent = `${viewNames[state.view]} · ${items.length} Produkt${items.length === 1 ? "" : "e"}`;
 
   if (!state.products.size) {
     $("list").innerHTML = `<div class="empty"><h2>Noch keine Angebote in der Datenbank</h2>
-      <p>GitHub lädt die Angebote jeden Morgen automatisch. Der erste Abruf läuft direkt nach der Einrichtung – schau in ein paar Minuten wieder rein.</p>
+      <p>GitHub lädt die Angebote jeden Montag automatisch. Der erste Abruf läuft direkt nach der Einrichtung – schau in ein paar Minuten wieder rein.</p>
       <button class="btn" data-action="refresh" type="button">Neu laden</button></div>`;
     $("btn-more").hidden = true;
     return;
   }
   if (!items.length) {
-    const msg = { fav: "Tippe bei einem Produkt auf ☆, um es hier zu sammeln.", soon: "Für eine Vorhersage braucht ein Produkt mindestens zwei bisherige Angebotswochen. Die Datenbank wächst jeden Tag – nach ein paar Wochen gibt es hier viele Vorhersagen.", week: "Für diese Woche ist noch nichts gespeichert." }[state.view] || "Keine Treffer.";
+    const msg = { fav: "Tippe bei einem Produkt auf ☆, um es hier zu sammeln.", next: "Für nächste Woche gibt es noch keine Vorhersage. Eine Vorhersage braucht mindestens zwei bisherige Angebotswochen eines Produkts – die Datenbank wächst jeden Montag, nach ein paar Wochen füllt sich diese Liste.", week: "Für diese Woche ist noch nichts gespeichert." }[state.view] || "Keine Treffer.";
     $("list").innerHTML = `<div class="empty"><p>${msg}</p></div>`;
     $("btn-more").hidden = true;
     return;
@@ -246,11 +261,17 @@ function render() {
 
   const shown = items.slice(0, state.limit);
   let html = "";
-  if (state.view === "week" && state.sort === "name") {
-    const nowItems = shown.filter(({ d }) => d.current);
-    const nextItems = shown.filter(({ d }) => !d.current);
-    if (nowItems.length) html += `<div class="section-title">Aktuell · ${formatWeek(nowIdx)}</div>` + nowItems.map(cardHTML).join("");
-    if (nextItems.length) html += `<div class="section-title">Ab nächster Woche · ${formatWeek(nowIdx + 1)}</div>` + nextItems.map(cardHTML).join("");
+  if (state.view === "next") {
+    const titles = {
+      1: "Voraussichtlich im Angebot (Vorhersage)",
+      2: "Möglich (Vorhersage ± 1 Woche)",
+      3: "Schon angekündigt (Prospekt ist bereits da)",
+    };
+    for (const g of [1, 2, 3]) {
+      const part = shown.filter((x) => x.group === g);
+      const total = items.filter((x) => x.group === g).length;
+      if (part.length) html += `<div class="section-title">${titles[g]} · ${total}</div>` + part.map(cardHTML).join("");
+    }
   } else html = shown.map(cardHTML).join("");
   $("list").innerHTML = html;
   $("btn-more").hidden = items.length <= state.limit;

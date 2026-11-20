@@ -1,6 +1,6 @@
 # 🛒 Einkaufswagen – Supermarkt-Angebote mit Vorhersage
 
-Diese App lädt **jeden Morgen automatisch** die Prospekt-Angebote von **EDEKA, ALDI Nord, Lidl, REWE und famila** für Neu Wulmstorf (PLZ 21629). Die Angebote landen in einer Datenbank, und die App berechnet, **wann ein Produkt wieder im Angebot kommt**.
+Diese App lädt **jeden Montag automatisch** die Prospekt-Angebote von **EDEKA, ALDI Nord, Lidl, REWE und famila** für Neu Wulmstorf (PLZ 21629). Die Angebote landen in einer Datenbank, und die App berechnet, **wann ein Produkt wieder im Angebot kommt**.
 
 Du öffnest die App auf dem iPhone wie eine normale App (Symbol auf dem Home-Bildschirm). Ein Mac oder App Store ist dafür nicht nötig.
 
@@ -20,8 +20,8 @@ Jetzt hast du ein Symbol „Angebote“, das sich wie eine eigene App öffnet.
 
 | Teil | Was passiert |
 |---|---|
-| **Automatischer Abruf** | GitHub startet jeden Morgen um ca. 6:20 Uhr das Programm `scripts/update.mjs`. EDEKA, Lidl und REWE kommen von marktguru.de (Prospekte für deine PLZ), ALDI Nord direkt von aldi-nord.de, famila aus dem Prospekt des Markts Neu Wulmstorf. |
-| **Datenbank** | Alle Angebote mit Woche, Preis, Normalpreis und Rabatt stehen in `docs/data/products.json`. Die Historie wächst jeden Tag. |
+| **Automatischer Abruf** | GitHub startet jeden Montag um ca. 6:20 Uhr das Programm `scripts/update.mjs`. EDEKA, Lidl und REWE kommen von marktguru.de (Prospekte für deine PLZ), ALDI Nord direkt von aldi-nord.de, famila aus dem Prospekt des Markts Neu Wulmstorf. |
+| **Datenbank** | Alle Angebote mit Woche, Preis, Normalpreis und Rabatt stehen in `docs/data/products.json`. Die Historie wächst jede Woche. |
 | **Vorhersage** | Aus den Abständen zwischen den bisherigen Aktionen (Median) berechnet die App die nächste Angebotswoche. Sie zeigt auch an, wie sicher die Vorhersage ist. |
 | **App** | Die Webseite im Ordner `docs/` wird kostenlos über GitHub Pages veröffentlicht. |
 

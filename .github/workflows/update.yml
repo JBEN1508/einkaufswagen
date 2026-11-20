@@ -1,9 +1,9 @@
 name: Angebote aktualisieren
 
 on:
-  # jeden Tag um 6:23 Uhr (deutsche Winterzeit) – neue Prospekte erscheinen meist So/Mo, Lidl/ALDI auch Do
+  # jeden Montag um 6:23 Uhr (Winterzeit; im Sommer 7:23 Uhr) – dann gelten die neuen Wochenangebote
   schedule:
-    - cron: "23 5 * * *"
+    - cron: "23 5 * * 1"
   # Knopf "Run workflow" bei GitHub bzw. "Aktualisieren" in der App
   workflow_dispatch:
   # Code-Änderungen sofort veröffentlichen (ohne neuen Abruf)
