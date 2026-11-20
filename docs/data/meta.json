@@ -1,1 +1,17 @@
-{}
+{
+  "zip": "21629",
+  "repo": "JBEN1508/einkaufswagen",
+  "stores": [
+    "edeka",
+    "aldi",
+    "lidl",
+    "rewe",
+    "famila"
+  ],
+  "lastRun": "2026-11-20T18:19:24.958Z",
+  "lastUpdate": null,
+  "lastOfferCount": null,
+  "lastError": null,
+  "log": [],
+  "productCount": 0
+}
