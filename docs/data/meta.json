@@ -8,14 +8,17 @@
     "rewe",
     "famila"
   ],
-  "lastRun": "2026-11-20T18:22:37.188Z",
-  "lastUpdate": "2026-11-20T18:22:37.188Z",
-  "lastOfferCount": 1028,
+  "lastRun": "2026-11-20T18:28:58.242Z",
+  "lastUpdate": "2026-11-20T18:28:58.242Z",
+  "lastOfferCount": 1308,
   "lastError": null,
   "log": [
-    "✔ 1028 Angebote geladen, 885 neue Produkte (Schlüssel: marktguru.de)"
+    "✔ ALDI Nord: 211 Angebote von aldi-nord.de",
+    "✔ famila: 69 Angebote aus dem Prospekt (famila_kw47_DJWWW)",
+    "✔ marktguru (EDEKA, Lidl, REWE): 1028 Angebote",
+    "✔ 1159 neue Produkte"
   ],
-  "productCount": 885,
+  "productCount": 1159,
   "seenAdvertisers": [
     "Lidl [lidl]: 875",
     "Kaufland [kaufland]: 677",
