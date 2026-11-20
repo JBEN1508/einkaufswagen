@@ -20,7 +20,7 @@ Jetzt hast du ein Symbol „Angebote“, das sich wie eine eigene App öffnet.
 
 | Teil | Was passiert |
 |---|---|
-| **Automatischer Abruf** | GitHub startet jeden Morgen um ca. 6:20 Uhr das Programm `scripts/update.mjs`. Es holt die Angebote von marktguru.de, wo die Prospekte aller Ketten für deine PLZ gesammelt sind. |
+| **Automatischer Abruf** | GitHub startet jeden Morgen um ca. 6:20 Uhr das Programm `scripts/update.mjs`. EDEKA, Lidl und REWE kommen von marktguru.de (Prospekte für deine PLZ), ALDI Nord direkt von aldi-nord.de, famila aus dem Prospekt des Markts Neu Wulmstorf. |
 | **Datenbank** | Alle Angebote mit Woche, Preis, Normalpreis und Rabatt stehen in `docs/data/products.json`. Die Historie wächst jeden Tag. |
 | **Vorhersage** | Aus den Abständen zwischen den bisherigen Aktionen (Median) berechnet die App die nächste Angebotswoche. Sie zeigt auch an, wie sicher die Vorhersage ist. |
 | **App** | Die Webseite im Ordner `docs/` wird kostenlos über GitHub Pages veröffentlicht. |
@@ -91,3 +91,5 @@ docs/                          die App (wird über GitHub Pages veröffentlicht)
   js/marktguru.js              Abruf bei marktguru
 test/                          Tests (npm test)
 ```
+
+**Hinweis zu famila:** famila stellt seine Angebote nur als Prospekt bereit. Die App liest den Prospekttext und übernimmt nur Angebote, bei denen Normalpreis, Rabatt und Angebotspreis rechnerisch zusammenpassen (etwa 70 pro Woche). Einzelne Produktnamen können trotzdem etwas ungenau sein.

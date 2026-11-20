@@ -11,6 +11,8 @@ import { fileURLToPath } from "node:url";
 import { fetchAllOffers, STORES } from "../docs/js/marktguru.js";
 import { mergeOffers, mergeProducts, parseLegacyCSV, guessStoreFromFilename } from "../docs/js/data.js";
 import { DEFAULT_KEYWORDS } from "../docs/js/categories.js";
+import { fetchAldi } from "./sources/aldi.mjs";
+import { fetchFamila } from "./sources/famila.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const DATA = path.join(ROOT, "docs/data/products.json");
@@ -25,6 +27,7 @@ const config = {
   stores: STORES.map((s) => s.id),
   keywords: DEFAULT_KEYWORDS,
   extraKeywords: [],
+  familaMarkt: "neu-wulmstorf",
   apiKey: "",
   clientKey: "",
   ...readJSON(path.join(ROOT, "config.json"), {}),
@@ -57,8 +60,29 @@ if (fs.existsSync(IMPORT_DIR)) {
 }
 
 // ---- 2) aktuelle Angebote laden
+const BROWSER_HEADERS = {
+  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36",
+  "Accept-Language": "de-DE,de;q=0.9",
+};
 let fetchResult = null, fetchError = null;
+const extraOffers = [];
+const sourceErrors = [];
 if (process.env.SKIP_FETCH !== "1") {
+  // ALDI Nord und famila sind bei marktguru für diese PLZ nicht vertreten -> direkt von deren Seiten
+  if (config.stores.includes("aldi")) {
+    try {
+      const { offers } = await fetchAldi(BROWSER_HEADERS);
+      extraOffers.push(...offers);
+      log.push(`✔ ALDI Nord: ${offers.length} Angebote von aldi-nord.de`);
+    } catch (e) { sourceErrors.push(e.message); log.push(`⚠ ${e.message}`); }
+  }
+  if (config.stores.includes("famila")) {
+    try {
+      const { offers, leaflets } = await fetchFamila(config.familaMarkt, BROWSER_HEADERS);
+      extraOffers.push(...offers);
+      log.push(`✔ famila: ${offers.length} Angebote aus dem Prospekt (${leaflets.join(", ")})`);
+    } catch (e) { sourceErrors.push(e.message); log.push(`⚠ ${e.message}`); }
+  }
   try {
     fetchResult = await fetchAllOffers({
       zip: config.zip,
@@ -79,13 +103,15 @@ if (process.env.SKIP_FETCH !== "1") {
 }
 
 let added = 0;
+if (extraOffers.length) added += mergeOffers(products, extraOffers).added;
 if (fetchResult) {
   const r = mergeOffers(products, fetchResult.offers);
-  added = r.added;
-  log.push(`✔ ${fetchResult.offers.length} Angebote geladen, ${added} neue Produkte (Schlüssel: ${fetchResult.keySource})`);
+  added += r.added;
+  log.push(`✔ marktguru (EDEKA, Lidl, REWE): ${fetchResult.offers.length} Angebote`);
   if (fetchResult.errors.length) log.push(`⚠ ${fetchResult.errors.length} Suchbegriffe mit Fehler, z. B. ${fetchResult.errors[0]}`);
 }
-if (fetchError) log.push(`✖ Abruf fehlgeschlagen: ${fetchError}`);
+if (fetchError) log.push(`✖ marktguru-Abruf fehlgeschlagen: ${fetchError}`);
+if (fetchResult || extraOffers.length) log.push(`✔ ${added} neue Produkte`);
 
 // Nur Code geändert (push) und nichts importiert -> nichts speichern
 if (process.env.SKIP_FETCH === "1" && log.length === 0) {
@@ -104,9 +130,9 @@ fs.writeFileSync(META, JSON.stringify({
   repo: process.env.GITHUB_REPOSITORY || meta.repo || null,
   stores: config.stores,
   lastRun: now,
-  lastUpdate: fetchResult ? now : meta.lastUpdate || null,
-  lastOfferCount: fetchResult ? fetchResult.offers.length : meta.lastOfferCount ?? null,
-  lastError: fetchError,
+  lastUpdate: fetchResult || extraOffers.length ? now : meta.lastUpdate || null,
+  lastOfferCount: fetchResult || extraOffers.length ? (fetchResult?.offers.length || 0) + extraOffers.length : meta.lastOfferCount ?? null,
+  lastError: fetchError || (sourceErrors.length ? sourceErrors.join(" · ") : null),
   log,
   productCount: list.length,
   seenAdvertisers: fetchResult
