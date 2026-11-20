@@ -8,12 +8,35 @@
     "rewe",
     "famila"
   ],
-  "lastRun": "2026-11-20T18:21:16.501Z",
-  "lastUpdate": "2026-11-20T18:21:16.501Z",
+  "lastRun": "2026-11-20T18:22:37.188Z",
+  "lastUpdate": "2026-11-20T18:22:37.188Z",
   "lastOfferCount": 1028,
   "lastError": null,
   "log": [
     "✔ 1028 Angebote geladen, 885 neue Produkte (Schlüssel: marktguru.de)"
   ],
-  "productCount": 885
+  "productCount": 885,
+  "seenAdvertisers": [
+    "Lidl [lidl]: 875",
+    "Kaufland [kaufland]: 677",
+    "EDEKA [edeka]: 514",
+    "Netto Marken-Discount [netto-marken-discount]: 506",
+    "Marktkauf [marktkauf]: 429",
+    "REWE [rewe]: 361",
+    "PENNY [penny]: 348",
+    "Handelshof [handelshof]: 341",
+    "EDEKA Frischemarkt [edeka-frischemarkt]: 108",
+    "EDEKA Bandelt [edeka-bandelt]: 86",
+    "budni [budnikowsky]: 76",
+    "Dehner Garten-Center [dehner]: 25",
+    "Woolworth [woolworth]: 13",
+    "toom Baumarkt [toom-baumarkt]: 13",
+    "Möbel Inhofer [moebel-inhofer]: 11",
+    "XXXLutz [xxxl]: 8",
+    "mömax [moemax]: 6",
+    "porta [porta]: 4",
+    "KiK [kik]: 2",
+    "OBI [obi]: 2",
+    "SB-Möbel BOSS [sb-moebel-boss]: 1"
+  ]
 }
