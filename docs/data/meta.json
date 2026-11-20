@@ -8,10 +8,12 @@
     "rewe",
     "famila"
   ],
-  "lastRun": "2026-11-20T18:19:24.958Z",
-  "lastUpdate": null,
-  "lastOfferCount": null,
+  "lastRun": "2026-11-20T18:21:16.501Z",
+  "lastUpdate": "2026-11-20T18:21:16.501Z",
+  "lastOfferCount": 1028,
   "lastError": null,
-  "log": [],
-  "productCount": 0
+  "log": [
+    "✔ 1028 Angebote geladen, 885 neue Produkte (Schlüssel: marktguru.de)"
+  ],
+  "productCount": 885
 }
