@@ -1,15 +1,4 @@
-import fs from "node:fs";
-fs.mkdirSync("out",{recursive:true});
-const UA={"User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36","Accept-Language":"de-DE,de;q=0.9"};
-const h=await (await fetch("https://www.marktguru.de/",{headers:UA})).text();
-const apiKey=h.match(/"apiKey"\s*:\s*"([^"]+)"/i)?.[1], clientKey=h.match(/"clientKey"\s*:\s*"([^"]+)"/i)?.[1];
-const r=await fetch("https://api.marktguru.de/api/v1/offers/search?as=web&limit=3&offset=0&q=Butter&zipCode=21629",{headers:{...UA,"x-apikey":apiKey,"x-clientkey":clientKey}});
-const j=await r.json(); fs.writeFileSync("out/mg_offer.json", JSON.stringify(j.results.slice(0,2),null,1));
-const id=j.results[0].id; const out=[];
-// Bild-URLs aus der Website finden
-const page=await (await fetch(`https://www.marktguru.de/offers/${id}`,{headers:UA})).text();
-out.push("page imgs: "+[...new Set([...page.matchAll(/https:\/\/[^"' )]+?\.(?:webp|jpg|jpeg|png)/g)].map(m=>m[0]))].slice(0,15).join("\n"));
-for (const u of [`https://mg2de.b-cdn.net/api/v1/offers/${id}/images/default/0/small.webp`,`https://mg2de.b-cdn.net/api/v1/offers/${id}/images/default/0/medium.webp`,`https://mg2de.b-cdn.net/api/v1/offers/${id}/images/default/0/small.jpg`,`https://api.marktguru.de/api/v1/offers/${id}/images/default/0/small.webp`]) {
-  try { const x=await fetch(u,{headers:UA}); out.push(`${x.status} ${x.headers.get("content-type")} ${u}`);} catch(e){out.push("ERR "+u+" "+e.message)}
-}
-fs.writeFileSync("out/mg_images.txt", out.join("\n"));
+import fs from "node:fs"; fs.mkdirSync("out",{recursive:true});
+const H={"User-Agent":"Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1","Referer":"https://jben1508.github.io/","Accept":"image/webp,image/*"};
+const urls=["https://mg2de.b-cdn.net/api/v1/offers/25773822/images/default/0/small.webp","https://s7g10.scene7.com/is/image/aldinord/0331_47_2026_tk_blaetterteigschnecke_1_kg_2_on_comp?wid=240"];
+const out=[]; for(const u of urls){ const r=await fetch(u,{headers:H}); const b=await r.arrayBuffer(); out.push(`${r.status} ${r.headers.get("content-type")} ${b.byteLength} ${u}`);} fs.writeFileSync("out/ref.txt",out.join("\n"));
