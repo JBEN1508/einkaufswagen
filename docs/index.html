@@ -20,9 +20,18 @@
       <h1>Einkaufswagen</h1>
       <div id="subtitle" class="subtitle">Noch keine Angebote geladen</div>
     </div>
-    <button id="btn-refresh" class="btn btn-refresh" type="button" aria-label="Angebote aktualisieren">
-      <span class="refresh-icon" aria-hidden="true">⟳</span><span class="refresh-label" id="refresh-label">Aktualisieren</span>
-    </button>
+    <div class="header-btns">
+      <button id="btn-refresh" class="btn btn-refresh" type="button" aria-label="Angebote aktualisieren">
+        <span class="refresh-icon" aria-hidden="true">⟳</span><span class="refresh-label" id="refresh-label">Aktualisieren</span>
+      </button>
+      <div class="menu-wrap">
+        <button id="btn-menu" class="btn btn-secondary icon-btn" type="button" aria-label="Menü" aria-haspopup="true">⚙</button>
+        <div id="menu" class="menu" hidden>
+          <button type="button" data-view="fav">★ Merkliste</button>
+          <button type="button" data-view="settings">⚙ Einstellungen</button>
+        </div>
+      </div>
+    </div>
   </header>
 
   <nav id="store-chips" class="chips" aria-label="Markt wählen"></nav>
@@ -53,12 +62,11 @@
 
       <div id="tab-liste">
         <form id="liste-form" class="add-row" autocomplete="off">
-          <input id="liste-input" type="text" placeholder="z. B. Milch, 2× Butter …" enterkeyhint="done" />
+          <input id="liste-input" type="text" placeholder="Artikel eintragen, z. B. Nudeln" enterkeyhint="done" autocapitalize="sentences" />
           <button class="btn" type="submit">+</button>
         </form>
         <div id="liste-info" class="list-info"></div>
         <ul id="liste" class="einkauf"></ul>
-        <button id="liste-clear" class="btn btn-secondary btn-small" type="button" hidden>Erledigte entfernen</button>
       </div>
 
       <div id="tab-essen" hidden>
@@ -69,11 +77,11 @@
         </div>
         <div id="essen-days" class="days"></div>
       </div>
-      <p class="hint small">Einkaufszettel und Essensplan werden auf diesem Gerät gespeichert.</p>
+      <p class="hint small">Abhaken entfernt den Artikel von der Liste. Einkaufszettel und Essensplan werden auf diesem Gerät gespeichert.</p>
     </section>
 
     <section id="settings" class="settings" hidden>
-      <h2>Mehr</h2>
+      <h2>Einstellungen</h2>
 
       <div class="card-panel">
         <h3>Datenbank</h3>
@@ -113,9 +121,7 @@
     <button data-view="week" class="active" type="button"><span>🛒</span>Diese Woche</button>
     <button data-view="next" type="button"><span>🔮</span>Nächste Woche</button>
     <button data-view="all" type="button"><span>📋</span>Alle</button>
-    <button data-view="fav" type="button"><span>★</span>Merkliste</button>
     <button data-view="zettel" type="button"><span>📝</span>Einkaufs&shy;zettel</button>
-    <button data-view="settings" type="button"><span>⚙</span>Mehr</button>
   </nav>
 
   <!-- Fortschritt beim Aktualisieren -->

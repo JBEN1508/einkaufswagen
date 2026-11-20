@@ -80,7 +80,7 @@ async function refresh() {
       render();
       toast(state.meta.lastUpdate && state.meta.lastUpdate !== before
         ? "Neue Angebote geladen"
-        : "Du hast schon den neuesten Stand. Die Angebote werden jeden Montag automatisch geladen. Für einen Sofort-Abruf unter „Mehr“ den Token eintragen.", false, 8000);
+        : "Du hast schon den neuesten Stand. Die Angebote werden jeden Montag automatisch geladen. Für einen Sofort-Abruf unter ⚙ → Einstellungen den Token eintragen.", false, 8000);
       return;
     }
     await runWorkflow();
@@ -98,7 +98,7 @@ async function gh(path, opts = {}) {
     ...opts,
     headers: { Accept: "application/vnd.github+json", Authorization: `Bearer ${state.token}`, "X-GitHub-Api-Version": "2022-11-28", ...(opts.headers || {}) },
   });
-  if (res.status === 401) throw new Error("Der GitHub-Token ist ungültig oder abgelaufen. Bitte unter „Mehr“ einen neuen eintragen.");
+  if (res.status === 401) throw new Error("Der GitHub-Token ist ungültig oder abgelaufen. Bitte unter ⚙ → Einstellungen einen neuen eintragen.");
   if (res.status === 403 || res.status === 404) throw new Error("Der GitHub-Token hat keine Berechtigung. Er braucht für dieses Repository „Actions: Read and write“.");
   if (!res.ok) throw new Error(`GitHub meldet Fehler ${res.status}`);
   return res.status === 204 ? null : res.json();
@@ -161,6 +161,18 @@ function buildStaticUI() {
     window.scrollTo({ top: 0 });
     render();
   });
+  // Zahnrad-Menü oben rechts (Merkliste, Einstellungen)
+  $("btn-menu").addEventListener("click", (e) => { e.stopPropagation(); $("menu").hidden = !$("menu").hidden; });
+  document.addEventListener("click", (e) => { if (!e.target.closest(".menu-wrap")) $("menu").hidden = true; });
+  $("menu").addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-view]");
+    if (!b) return;
+    $("menu").hidden = true;
+    state.view = b.dataset.view;
+    state.limit = 150;
+    window.scrollTo({ top: 0 });
+    render();
+  });
   $("store-chips").addEventListener("click", (e) => {
     const b = e.target.closest("[data-store]");
     if (b) { state.store = b.dataset.store; render(); }
@@ -191,6 +203,8 @@ function render() {
   const isSettings = state.view === "settings";
   const isZettel = state.view === "zettel";
   for (const b of $("bottom-nav").querySelectorAll("button")) b.classList.toggle("active", b.dataset.view === state.view);
+  for (const b of $("menu").querySelectorAll("button")) b.classList.toggle("active", b.dataset.view === state.view);
+  $("btn-menu").classList.toggle("active", state.view === "fav" || state.view === "settings");
   for (const id of ["list", "list-info", "toolbar", "store-chips"]) $(id).hidden = isSettings || isZettel;
   $("settings").hidden = !isSettings;
   $("zettel").hidden = !isZettel;
@@ -389,7 +403,6 @@ function openDetail(id) {
       <label class="field"><span>Kategorie</span><select id="detail-cat">${CATEGORIES.map((c) => `<option ${c === p.category ? "selected" : ""}>${esc(c)}</option>`).join("")}</select></label>
     </div>
     <div class="detail-actions">
-      <button id="detail-shop" class="btn" type="button">🛒 Auf den Einkaufszettel</button>
       <button id="detail-fav" class="btn btn-secondary" type="button">${p.favorite ? "★ Von Merkliste entfernen" : "☆ Auf die Merkliste"}</button>
     </div>`;
   $("detail-cat").addEventListener("change", (e) => {
@@ -399,11 +412,6 @@ function openDetail(id) {
     render();
   });
   $("detail-fav").addEventListener("click", () => { toggleFav(p.id); openDetail(p.id); });
-  $("detail-shop").addEventListener("click", () => {
-    const e = d.current || d.upcoming || d.latest;
-    addShoppingItem(p.name, { store: p.store, price: e?.price ?? null, productId: p.id });
-    toast(`„${p.name}“ steht jetzt auf dem Einkaufszettel`);
-  });
   $("detail").hidden = false;
 }
 
@@ -426,12 +434,10 @@ const zettel = {
 const saveItems = () => local.set("shopping", zettel.items);
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 
-function addShoppingItem(text, extra = {}) {
+function addShoppingItem(text) {
   text = String(text || "").trim();
   if (!text) return;
-  // gleiches Produkt nicht doppelt
-  if (extra.productId && zettel.items.some((i) => i.productId === extra.productId && !i.done)) return;
-  zettel.items.unshift({ id: uid(), text, done: false, ...extra });
+  zettel.items.push({ id: uid(), text });
   saveItems();
 }
 
@@ -448,20 +454,12 @@ function renderZettel() {
 }
 
 function renderListe() {
-  const open = zettel.items.filter((i) => !i.done);
-  const done = zettel.items.filter((i) => i.done);
-  const row = (i) => {
-    const s = i.store ? storeById[i.store] : null;
-    const sub = [s ? s.label : "", i.price != null ? money(i.price) : ""].filter(Boolean).join(" · ");
-    return `<li class="${i.done ? "done" : ""}" data-id="${esc(i.id)}">
-      <input type="checkbox" ${i.done ? "checked" : ""} aria-label="abhaken" />
-      <div class="txt"><span>${esc(i.text)}</span>${sub ? `<small>${esc(sub)}</small>` : ""}</div>
-      <button class="del" type="button" aria-label="löschen">✕</button></li>`;
-  };
-  $("liste").innerHTML = [...open, ...done].map(row).join("") ||
-    `<li class="empty-li"><div class="txt"><small>Noch nichts auf dem Zettel. Oben eintippen oder bei einem Angebot auf „Auf den Einkaufszettel“ tippen.</small></div></li>`;
-  $("liste-info").textContent = zettel.items.length ? `${done.length} von ${zettel.items.length} erledigt` : "";
-  $("liste-clear").hidden = !done.length;
+  zettel.items = zettel.items.filter((i) => !i.done); // alte, abgehakte Einträge aufräumen
+  $("liste").innerHTML = zettel.items.map((i) => `<li data-id="${esc(i.id)}">
+      <input type="checkbox" aria-label="${esc(i.text)} abhaken" />
+      <div class="txt"><span>${esc(i.text)}</span></div></li>`).join("") ||
+    `<li class="empty-li"><div class="txt"><small>Die Liste ist leer. Oben einen Artikel eintragen.</small></div></li>`;
+  $("liste-info").textContent = zettel.items.length ? `${zettel.items.length} Artikel` : "";
 }
 
 const DAYS = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"];
@@ -492,28 +490,24 @@ function buildZettelUI() {
   });
   $("liste-form").addEventListener("submit", (e) => {
     e.preventDefault();
-    const v = $("liste-input").value;
-    // mehrere Einträge auf einmal: "Milch, Butter, Eier"
-    for (const part of v.split(/[,;\n]/).reverse()) addShoppingItem(part);
+    addShoppingItem($("liste-input").value);
     $("liste-input").value = "";
+    $("liste-input").focus();
     renderListe();
   });
+  // Abhaken -> Artikel verschwindet (mit "Rückgängig" im Hinweis)
   $("liste").addEventListener("change", (e) => {
     const li = e.target.closest("li[data-id]");
-    const it = li && zettel.items.find((i) => i.id === li.dataset.id);
-    if (!it) return;
-    it.done = e.target.checked;
-    saveItems(); renderListe();
-  });
-  $("liste").addEventListener("click", (e) => {
-    if (!e.target.closest(".del")) return;
-    const id = e.target.closest("li[data-id]").dataset.id;
-    zettel.items = zettel.items.filter((i) => i.id !== id);
-    saveItems(); renderListe();
-  });
-  $("liste-clear").addEventListener("click", () => {
-    zettel.items = zettel.items.filter((i) => !i.done);
-    saveItems(); renderListe();
+    const idx = li ? zettel.items.findIndex((i) => i.id === li.dataset.id) : -1;
+    if (idx < 0) return;
+    const [removed] = zettel.items.splice(idx, 1);
+    saveItems();
+    li.classList.add("leaving");
+    setTimeout(renderListe, 250);
+    toast(`„${removed.text}“ abgehakt`, false, 4000, "Rückgängig", () => {
+      zettel.items.splice(Math.min(idx, zettel.items.length), 0, removed);
+      saveItems(); renderListe();
+    });
   });
   $("essen-prev").addEventListener("click", () => { zettel.weekIdx--; renderEssen(); });
   $("essen-next").addEventListener("click", () => { zettel.weekIdx++; renderEssen(); });
@@ -531,9 +525,15 @@ function buildZettelUI() {
 
 // ---------------------------------------------------------------- Hinweis
 let toastTimer;
-function toast(msg, isError = false, ms = 5000) {
+function toast(msg, isError = false, ms = 5000, actionLabel = null, onAction = null) {
   const el = $("toast");
   el.textContent = msg;
+  if (actionLabel) {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "toast-action"; b.textContent = actionLabel;
+    b.addEventListener("click", () => { el.hidden = true; onAction?.(); });
+    el.append(" ", b);
+  }
   el.classList.toggle("error", isError);
   el.hidden = false;
   clearTimeout(toastTimer);

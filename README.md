@@ -38,7 +38,7 @@ Ohne Einrichtung holt der Knopf nur den neuesten gespeicherten Stand. Soll er so
 3. **Repository access:** *Only select repositories* und dann `einkaufswagen` auswählen.
 4. **Permissions:** unter *Repository permissions* bei **Actions** auf **Read and write** stellen.
 5. Unten auf **Generate token** tippen und den Token (beginnt mit `github_pat_`) kopieren.
-6. In der App auf **Mehr**, den Token einfügen und **Token speichern** tippen.
+6. In der App oben rechts auf **⚙ → Einstellungen**, den Token einfügen und **Token speichern** tippen.
 
 Der Token bleibt nur auf deinem iPhone gespeichert.
 
