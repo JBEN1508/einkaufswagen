@@ -2,7 +2,7 @@
 //
 // Die Angebote lädt GitHub jeden Montag automatisch (scripts/update.mjs) und legt
 // sie in data/products.json ab. Diese Seite liest nur diese Datei.
-// Merkliste und geänderte Kategorien werden auf dem Gerät gespeichert (localStorage).
+// Konten, „Meine Produkte“, Einkaufsliste und Essensplan werden auf dem Gerät gespeichert (localStorage).
 import { STORES, storeById } from "./marktguru.js";
 import { CATEGORIES } from "./categories.js";
 import { currentWeekIndex, formatWeek, isoWeekOfIndex, mondayOfIndex } from "./predict.js";
@@ -22,18 +22,43 @@ const local = {
   set(key, value) { try { localStorage.setItem("ew_" + key, JSON.stringify(value)); } catch { /* egal */ } },
 };
 
+// ---------------------------------------------------------------- Konten (jedes Konto: eigene Produkte, Liste, Essensplan)
+const accounts = {
+  list: local.get("accounts", null),
+  current: local.get("currentAccount", null),
+};
+(function initAccounts() {
+  if (!Array.isArray(accounts.list) || !accounts.list.length) {
+    // erstes Konto anlegen und bisherige Daten übernehmen
+    accounts.list = [{ id: "a1", name: "Mein Konto" }];
+    for (const k of ["favorites", "categories", "shopping", "meals"]) {
+      const v = local.get(k, undefined);
+      if (v !== undefined) local.set(`a1_${k}`, v);
+    }
+    local.set("accounts", accounts.list);
+  }
+  if (!accounts.list.some((a) => a.id === accounts.current)) accounts.current = accounts.list[0].id;
+  local.set("currentAccount", accounts.current);
+})();
+const acc = {
+  get: (key, fallback) => local.get(`${accounts.current}_${key}`, fallback),
+  set: (key, value) => local.set(`${accounts.current}_${key}`, value),
+};
+const currentAccount = () => accounts.list.find((a) => a.id === accounts.current) || accounts.list[0];
+
 // ---------------------------------------------------------------- Zustand
 const state = {
   products: new Map(),
   meta: {},
-  view: "week",
+  view: "all",
+  offerTab: "week",
   store: "all",
   category: "",
   sort: "name",
   search: "",
   limit: 150,
-  favorites: new Set(local.get("favorites", [])),
-  categoryOverrides: local.get("categories", {}),
+  favorites: new Set(acc.get("favorites", [])),
+  categoryOverrides: acc.get("categories", {}),
   token: local.get("token", ""),
   busy: false,
 };
@@ -55,6 +80,7 @@ async function loadData() {
   ]);
   state.meta = meta || {};
   state.products = new Map((data.products || []).map((p) => {
+    p.origCategory = p.category;
     p.favorite = state.favorites.has(p.id);
     if (state.categoryOverrides[p.id]) p.category = state.categoryOverrides[p.id];
     return [p.id, p];
@@ -161,7 +187,7 @@ function buildStaticUI() {
     window.scrollTo({ top: 0 });
     render();
   });
-  // Zahnrad-Menü oben rechts (Merkliste, Einstellungen)
+  // Zahnrad-Menü oben rechts (Konto wechseln, Einstellungen)
   $("btn-menu").addEventListener("click", (e) => { e.stopPropagation(); $("menu").hidden = !$("menu").hidden; });
   document.addEventListener("click", (e) => { if (!e.target.closest(".menu-wrap")) $("menu").hidden = true; });
   $("menu").addEventListener("click", (e) => {
@@ -189,6 +215,15 @@ function buildStaticUI() {
   });
 
   buildZettelUI();
+  buildAccountUI();
+  $("offer-tabs").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-tab]");
+    if (!b) return;
+    state.offerTab = b.dataset.tab;
+    state.limit = 150;
+    window.scrollTo({ top: 0 });
+    render();
+  });
   $("set-token").value = state.token;
   $("btn-token-save").addEventListener("click", () => {
     state.token = $("set-token").value.trim();
@@ -198,48 +233,73 @@ function buildStaticUI() {
 }
 
 // ---------------------------------------------------------------- Rendering
+const entryAt = (p, w) => p.history.find((h) => h.week === w) || null;
+
+/**
+ * Teilt ein Produkt für eine bestimmte Woche W ein:
+ *  "angekündigt" – Prospekt für W ist da, und es ist ein NEUES Angebot
+ *                  (nicht nur eine Aktion, die aus der Vorwoche weiterläuft)
+ *  "voraussichtlich" – Vorhersage trifft genau W
+ *  "möglich" – W liegt im wahrscheinlichen Zeitraum der Vorhersage
+ */
+function classifyForWeek(p, d, W) {
+  const pr = d.pred;
+  if (entryAt(p, W)) return entryAt(p, W - 1) ? null : "angekündigt";
+  // läuft gerade (oder ist schon angekündigt) -> keine Vorhersage für die Wochen direkt danach
+  for (let w = currentWeekIndex(); w < W; w++) if (entryAt(p, w)) return null;
+  if (pr.nextIdx == null || pr.status === "overdue") return null;
+  if (pr.nextIdx === W) return "voraussichtlich";
+  if (pr.rangeLo <= W && W <= pr.rangeHi) return "möglich";
+  return null;
+}
+
+/** Für "Meine Produkte": ist das Produkt diese oder nächste Woche im Angebot? */
+function favStatus(p, d, nowIdx) {
+  if (d.current) return { rank: 0, cls: "hl-now", text: `🔥 Diese Woche im Angebot${d.current.to ? ` – bis ${dayFmt(d.current.to)}` : ""}` };
+  const next = classifyForWeek(p, d, nowIdx + 1);
+  if (next === "angekündigt") return { rank: 1, cls: "hl-next", text: "⏭ Nächste Woche im Angebot" };
+  if (next === "voraussichtlich") return { rank: 2, cls: "hl-next", text: "⏭ Nächste Woche voraussichtlich im Angebot" };
+  return { rank: 9, cls: "", text: "" };
+}
+
 function render() {
   const nowIdx = currentWeekIndex();
   const isSettings = state.view === "settings";
   const isZettel = state.view === "zettel";
+  const isOffers = state.view === "offers";
   for (const b of $("bottom-nav").querySelectorAll("button")) b.classList.toggle("active", b.dataset.view === state.view);
-  for (const b of $("menu").querySelectorAll("button")) b.classList.toggle("active", b.dataset.view === state.view);
-  $("btn-menu").classList.toggle("active", state.view === "fav" || state.view === "settings");
+  for (const b of $("menu").querySelectorAll("button[data-view]")) b.classList.toggle("active", b.dataset.view === state.view);
+  $("btn-menu").classList.toggle("active", isSettings);
   for (const id of ["list", "list-info", "toolbar", "store-chips"]) $(id).hidden = isSettings || isZettel;
   $("settings").hidden = !isSettings;
   $("zettel").hidden = !isZettel;
+  $("offer-tabs").hidden = !isOffers;
+  for (const b of $("offer-tabs").querySelectorAll("button")) b.classList.toggle("active", b.dataset.tab === state.offerTab);
+  renderAccountUI();
 
   const { week, year } = isoWeekOfIndex(nowIdx);
-  const zip = state.meta.zip || "21629";
   $("subtitle").textContent = state.meta.lastUpdate
-    ? `KW ${week}/${year} · PLZ ${zip} · Stand ${dateTimeFmt(state.meta.lastUpdate)}`
-    : `KW ${week}/${year} · PLZ ${zip} · noch keine Angebote geladen`;
+    ? `👤 ${currentAccount().name} · KW ${week}/${year} · Stand ${dateTimeFmt(state.meta.lastUpdate)}`
+    : `👤 ${currentAccount().name} · KW ${week}/${year} · noch keine Angebote geladen`;
 
   if (isSettings) { renderSettings(); $("btn-more").hidden = true; return; }
   if (isZettel) { renderZettel(); $("btn-more").hidden = true; return; }
 
   const enabled = state.meta.stores || STORES.map((s) => s.id);
   const withInfo = [...state.products.values()].filter((p) => enabled.includes(p.store)).map((p) => ({ p, d: describe(p, nowIdx) }));
+  const W = isOffers ? nowIdx + ({ week: 0, next: 1, next2: 2 }[state.offerTab] ?? 0) : nowIdx;
   let base;
-  const nextIdx = nowIdx + 1;
-  if (state.view === "week") base = withInfo.filter(({ d }) => d.current);
-  else if (state.view === "next") {
-    // 1) voraussichtlich: Vorhersage trifft genau nächste Woche
-    // 2) möglich: nächste Woche liegt im wahrscheinlichen Zeitraum
-    // 3) schon angekündigt (Prospekt für nächste Woche ist schon da)
+  if (isOffers && state.offerTab === "week") {
+    base = withInfo.filter(({ d }) => d.current).map((x) => ({ ...x, week: nowIdx }));
+  } else if (isOffers) {
     base = [];
     for (const x of withInfo) {
-      const { d } = x;
-      const pr = d.pred;
-      if (d.upcoming && d.upcoming.week === nextIdx) x.group = 3;
-      else if (pr.nextIdx === nextIdx && pr.status !== "overdue") x.group = 1;
-      else if (pr.nextIdx != null && pr.status !== "overdue" && pr.status !== "active" && pr.rangeLo <= nextIdx && nextIdx <= pr.rangeHi) x.group = 2;
-      else continue;
-      base.push(x);
+      const g = classifyForWeek(x.p, x.d, W);
+      if (g) base.push({ ...x, group: { voraussichtlich: 1, möglich: 2, angekündigt: 3 }[g], week: W });
     }
-  }
-  else if (state.view === "fav") base = withInfo.filter(({ p }) => p.favorite);
-  else base = withInfo;
+  } else if (state.view === "fav") {
+    base = withInfo.filter(({ p }) => p.favorite).map((x) => ({ ...x, fav: favStatus(x.p, x.d, nowIdx) }));
+  } else base = withInfo;
 
   renderChips(base, enabled);
 
@@ -250,28 +310,37 @@ function render() {
     (!q || p.name.toLowerCase().includes(q) || (p.brand || "").toLowerCase().includes(q)));
 
   const coll = new Intl.Collator("de-DE", { sensitivity: "base", numeric: true });
-  const shownEntry = (d) => d.current || d.upcoming || d.latest;
+  const shownEntry = (x) => (x.week != null ? entryAt(x.p, x.week) : null) || x.d.current || x.d.upcoming || x.d.latest;
   const sorters = {
     name: (a, b) => coll.compare(a.p.name, b.p.name),
     category: (a, b) => coll.compare(a.p.category, b.p.category) || coll.compare(a.p.name, b.p.name),
-    discount: (a, b) => (shownEntry(b.d)?.savedPercent ?? -1) - (shownEntry(a.d)?.savedPercent ?? -1),
+    discount: (a, b) => (shownEntry(b)?.savedPercent ?? -1) - (shownEntry(a)?.savedPercent ?? -1),
     next: (a, b) => (a.d.pred.nextIdx ?? 1e9) - (b.d.pred.nextIdx ?? 1e9) || coll.compare(a.p.name, b.p.name),
   };
   items.sort(sorters[state.sort] || sorters.name);
-  if (state.view === "next") items.sort((a, b) => a.group - b.group); // Abschnitte zusammenhalten
+  if (isOffers && state.offerTab !== "week") items.sort((a, b) => a.group - b.group); // Abschnitte zusammenhalten
+  if (state.view === "fav") items.sort((a, b) => a.fav.rank - b.fav.rank);         // Angebote nach oben
 
-  const viewNames = { week: `Diese Woche im Angebot · ${formatWeek(nowIdx)}`, next: `Nächste Woche · ${formatWeek(nextIdx)}`, all: "Alle bekannten Produkte", fav: "Deine Merkliste" };
+  const viewNames = {
+    all: "Alle bekannten Produkte",
+    fav: "Meine Produkte",
+    offers: { week: "Diese Woche im Angebot", next: "Nächste Woche", next2: "Übernächste Woche" }[state.offerTab] + ` · ${formatWeek(W)}`,
+  };
   $("list-info").textContent = `${viewNames[state.view]} · ${items.length} Produkt${items.length === 1 ? "" : "e"}`;
 
   if (!state.products.size) {
     $("list").innerHTML = `<div class="empty"><h2>Noch keine Angebote in der Datenbank</h2>
-      <p>GitHub lädt die Angebote jeden Montag automatisch. Der erste Abruf läuft direkt nach der Einrichtung – schau in ein paar Minuten wieder rein.</p>
+      <p>GitHub lädt die Angebote jeden Montag automatisch.</p>
       <button class="btn" data-action="refresh" type="button">Neu laden</button></div>`;
     $("btn-more").hidden = true;
     return;
   }
   if (!items.length) {
-    const msg = { fav: "Tippe bei einem Produkt auf ☆, um es hier zu sammeln.", next: "Für nächste Woche gibt es noch keine Vorhersage. Eine Vorhersage braucht mindestens zwei bisherige Angebotswochen eines Produkts – die Datenbank wächst jeden Montag, nach ein paar Wochen füllt sich diese Liste.", week: "Für diese Woche ist noch nichts gespeichert." }[state.view] || "Keine Treffer.";
+    const noPred = "Eine Vorhersage braucht mindestens zwei bisherige Angebotswochen eines Produkts. Die Datenbank wächst jeden Montag – nach ein paar Wochen füllt sich diese Liste.";
+    const msg = state.view === "fav"
+      ? "Noch keine Produkte markiert. Tippe unter „Alle Produkte“ oder bei den Angeboten auf ☆ bei allem, was du gut findest oder sonst immer kaufst. Sobald eins davon im Angebot ist, steht es hier ganz oben."
+      : isOffers && state.offerTab !== "week" ? `Für diese Woche gibt es noch keine Angebote oder Vorhersagen. ${noPred}`
+      : "Keine Treffer.";
     $("list").innerHTML = `<div class="empty"><p>${msg}</p></div>`;
     $("btn-more").hidden = true;
     return;
@@ -279,17 +348,22 @@ function render() {
 
   const shown = items.slice(0, state.limit);
   let html = "";
-  if (state.view === "next") {
+  if (isOffers && state.offerTab !== "week") {
     const titles = {
       1: "Voraussichtlich im Angebot (Vorhersage)",
       2: "Möglich (Vorhersage ± 1 Woche)",
-      3: "Schon angekündigt (Prospekt ist bereits da)",
+      3: "Neu im Prospekt (schon angekündigt)",
     };
     for (const g of [1, 2, 3]) {
       const part = shown.filter((x) => x.group === g);
       const total = items.filter((x) => x.group === g).length;
       if (part.length) html += `<div class="section-title">${titles[g]} · ${total}</div>` + part.map(cardHTML).join("");
     }
+  } else if (state.view === "fav") {
+    const onOffer = shown.filter((x) => x.fav.rank < 9);
+    const rest = shown.filter((x) => x.fav.rank === 9);
+    if (onOffer.length) html += `<div class="section-title">Im Angebot · ${onOffer.length}</div>` + onOffer.map(cardHTML).join("");
+    if (rest.length) html += `<div class="section-title">Gerade nicht im Angebot · ${rest.length}</div>` + rest.map(cardHTML).join("");
   } else html = shown.map(cardHTML).join("");
   $("list").innerHTML = html;
   $("btn-more").hidden = items.length <= state.limit;
@@ -328,14 +402,25 @@ function thumbHTML(p) {
     onerror="this.outerHTML='<div class=&quot;thumb ph&quot;>${icon}</div>'" />`;
 }
 
-function cardHTML({ p, d }) {
+function cardHTML({ p, d, week, fav, group }) {
   const s = storeById[p.store];
-  const e = d.current || d.upcoming || d.latest;
-  const tag = d.current ? `<span class="tag now">jetzt</span>` : (d.upcoming ? `<span class="tag next">ab ${formatWeek(d.upcoming.week, false)}</span>` : "");
-  const validTxt = d.current?.to ? `bis ${dayFmt(d.current.to)}` : (e && !d.current && !d.upcoming ? `zuletzt ${formatWeek(e.week, false)}` : "");
-  return `<div class="card" data-id="${esc(p.id)}">
+  const nowIdx = currentWeekIndex();
+  const atWeek = week != null ? entryAt(p, week) : null;
+  const e = atWeek || d.current || d.upcoming || d.latest;
+  let tag = "";
+  if (atWeek && week === nowIdx) tag = `<span class="tag now">jetzt</span>`;
+  else if (atWeek) tag = `<span class="tag next">${formatWeek(week, false)}</span>`;
+  else if (group === 1 || group === 2) tag = `<span class="tag pred">Vorhersage</span>`;
+  else if (d.current) tag = `<span class="tag now">jetzt</span>`;
+  else if (d.upcoming) tag = `<span class="tag next">ab ${formatWeek(d.upcoming.week, false)}</span>`;
+  let validTxt = "";
+  if (e?.to && (atWeek || e === d.current)) validTxt = `${e.from ? `${dayFmt(e.from)} – ` : ""}${dayFmt(e.to)}`;
+  else if (e && !atWeek) validTxt = `zuletzt im Angebot: ${formatWeek(e.week, false)}`;
+  const banner = fav?.text ? `<div class="fav-banner">${esc(fav.text)}</div>` : "";
+  return `<div class="card ${fav?.cls || ""}" data-id="${esc(p.id)}">
+    ${banner}
     <div class="card-top"><span class="store-badge" style="--c:${s.color}">${esc(s.label)}</span><span class="cat">${esc(p.category)}</span>${tag}
-      <button class="star ${p.favorite ? "on" : ""}" type="button" aria-label="Merken">${p.favorite ? "★" : "☆"}</button></div>
+      <button class="star ${p.favorite ? "on" : ""}" type="button" aria-label="Zu Meine Produkte">${p.favorite ? "★" : "☆"}</button></div>
     <div class="card-body">
       ${thumbHTML(p)}
       <div class="card-main">
@@ -403,12 +488,12 @@ function openDetail(id) {
       <label class="field"><span>Kategorie</span><select id="detail-cat">${CATEGORIES.map((c) => `<option ${c === p.category ? "selected" : ""}>${esc(c)}</option>`).join("")}</select></label>
     </div>
     <div class="detail-actions">
-      <button id="detail-fav" class="btn btn-secondary" type="button">${p.favorite ? "★ Von Merkliste entfernen" : "☆ Auf die Merkliste"}</button>
+      <button id="detail-fav" class="btn btn-secondary" type="button">${p.favorite ? "★ Aus „Meine Produkte“ entfernen" : "☆ Zu „Meine Produkte“ hinzufügen"}</button>
     </div>`;
   $("detail-cat").addEventListener("change", (e) => {
     p.category = e.target.value;
     state.categoryOverrides[p.id] = p.category;
-    local.set("categories", state.categoryOverrides);
+    acc.set("categories", state.categoryOverrides);
     render();
   });
   $("detail-fav").addEventListener("click", () => { toggleFav(p.id); openDetail(p.id); });
@@ -420,18 +505,18 @@ function toggleFav(id) {
   if (!p) return;
   p.favorite = !p.favorite;
   if (p.favorite) state.favorites.add(id); else state.favorites.delete(id);
-  local.set("favorites", [...state.favorites]);
+  acc.set("favorites", [...state.favorites]);
   render();
 }
 
 // ---------------------------------------------------------------- Einkaufszettel
 const zettel = {
   tab: "liste",
-  items: local.get("shopping", []),          // [{ id, text, done, store, price, productId }]
-  meals: local.get("meals", {}),             // { "2026-W48": { "0": "Spaghetti", … } }
+  items: acc.get("shopping", []),            // [{ id, text }]
+  meals: acc.get("meals", {}),               // { "2026-W48": { "0": "Spaghetti", … } }
   weekIdx: currentWeekIndex(),
 };
-const saveItems = () => local.set("shopping", zettel.items);
+const saveItems = () => acc.set("shopping", zettel.items);
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 
 function addShoppingItem(text) {
@@ -447,7 +532,7 @@ function weekKey(idx) {
 }
 
 function renderZettel() {
-  for (const b of document.querySelectorAll(".segmented button")) b.classList.toggle("active", b.dataset.tab === zettel.tab);
+  for (const b of $("zettel-tabs").querySelectorAll("button")) b.classList.toggle("active", b.dataset.tab === zettel.tab);
   $("tab-liste").hidden = zettel.tab !== "liste";
   $("tab-essen").hidden = zettel.tab !== "essen";
   if (zettel.tab === "liste") renderListe(); else renderEssen();
@@ -484,7 +569,7 @@ function renderEssen() {
 }
 
 function buildZettelUI() {
-  document.querySelector(".segmented").addEventListener("click", (e) => {
+  $("zettel-tabs").addEventListener("click", (e) => {
     const b = e.target.closest("[data-tab]");
     if (b) { zettel.tab = b.dataset.tab; renderZettel(); }
   });
@@ -519,7 +604,72 @@ function buildZettelUI() {
     const plan = zettel.meals[key] || (zettel.meals[key] = {});
     if (t.value.trim()) plan[t.dataset.day] = t.value; else delete plan[t.dataset.day];
     if (!Object.keys(plan).length) delete zettel.meals[key];
-    local.set("meals", zettel.meals);
+    acc.set("meals", zettel.meals);
+  });
+}
+
+// ---------------------------------------------------------------- Konten: Oberfläche
+function switchAccount(id) {
+  if (!accounts.list.some((a) => a.id === id)) return;
+  accounts.current = id;
+  local.set("currentAccount", id);
+  state.favorites = new Set(acc.get("favorites", []));
+  state.categoryOverrides = acc.get("categories", {});
+  zettel.items = acc.get("shopping", []);
+  zettel.meals = acc.get("meals", {});
+  for (const p of state.products.values()) {
+    p.favorite = state.favorites.has(p.id);
+    p.category = state.categoryOverrides[p.id] || p.origCategory;
+  }
+  render();
+  toast(`Konto „${currentAccount().name}“ ist jetzt aktiv`);
+}
+
+function renderAccountUI() {
+  $("menu-accounts").innerHTML = accounts.list.map((a) =>
+    `<button type="button" data-account="${esc(a.id)}">👤 ${esc(a.name)}${a.id === accounts.current ? '<span class="check">✓</span>' : ""}</button>`).join("");
+  $("account-list").innerHTML = accounts.list.map((a) => `<li class="${a.id === accounts.current ? "active" : ""}" data-id="${esc(a.id)}">
+      <span class="acc-name">👤 ${esc(a.name)}${a.id === accounts.current ? "<small>aktiv</small>" : ""}</span>
+      ${a.id !== accounts.current ? '<button type="button" data-act="use">Wechseln</button>' : ""}
+      <button type="button" data-act="rename" aria-label="Umbenennen">✎</button>
+      ${accounts.list.length > 1 ? '<button type="button" data-act="delete" aria-label="Löschen">🗑</button>' : ""}
+    </li>`).join("");
+}
+
+function buildAccountUI() {
+  $("menu-accounts").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-account]");
+    if (!b) return;
+    $("menu").hidden = true;
+    if (b.dataset.account !== accounts.current) switchAccount(b.dataset.account);
+  });
+  $("account-form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const name = $("account-name").value.trim();
+    if (!name) return;
+    const id = "a" + Date.now().toString(36);
+    accounts.list.push({ id, name });
+    local.set("accounts", accounts.list);
+    $("account-name").value = "";
+    switchAccount(id);
+  });
+  $("account-list").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-act]");
+    if (!b) return;
+    const id = b.closest("li").dataset.id;
+    const a = accounts.list.find((x) => x.id === id);
+    if (b.dataset.act === "use") switchAccount(id);
+    if (b.dataset.act === "rename") {
+      const name = prompt("Neuer Name für das Konto:", a.name);
+      if (name && name.trim()) { a.name = name.trim().slice(0, 30); local.set("accounts", accounts.list); render(); }
+    }
+    if (b.dataset.act === "delete") {
+      if (!confirm(`Konto „${a.name}“ mit seinen Produkten, seiner Einkaufsliste und seinem Essensplan löschen?`)) return;
+      accounts.list = accounts.list.filter((x) => x.id !== id);
+      local.set("accounts", accounts.list);
+      for (const k of ["favorites", "categories", "shopping", "meals"]) { try { localStorage.removeItem(`ew_${id}_${k}`); } catch { /* egal */ } }
+      if (accounts.current === id) switchAccount(accounts.list[0].id); else render();
+    }
   });
 }
 

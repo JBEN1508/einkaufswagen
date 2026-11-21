@@ -27,12 +27,20 @@
       <div class="menu-wrap">
         <button id="btn-menu" class="btn btn-secondary icon-btn" type="button" aria-label="Menü" aria-haspopup="true">⚙</button>
         <div id="menu" class="menu" hidden>
-          <button type="button" data-view="fav">★ Merkliste</button>
+          <div class="menu-label">Konto wechseln</div>
+          <div id="menu-accounts"></div>
+          <hr />
           <button type="button" data-view="settings">⚙ Einstellungen</button>
         </div>
       </div>
     </div>
   </header>
+
+  <div id="offer-tabs" class="segmented three offer-tabs" role="tablist" hidden>
+    <button type="button" data-tab="week" class="active">Diese Woche</button>
+    <button type="button" data-tab="next">Nächste Woche</button>
+    <button type="button" data-tab="next2">Woche darauf</button>
+  </div>
 
   <nav id="store-chips" class="chips" aria-label="Markt wählen"></nav>
 
@@ -55,7 +63,7 @@
     <button id="btn-more" class="btn btn-secondary btn-more" type="button" hidden>Weitere anzeigen</button>
 
     <section id="zettel" class="zettel" hidden>
-      <div class="segmented" role="tablist">
+      <div id="zettel-tabs" class="segmented" role="tablist">
         <button type="button" data-tab="liste" class="active">🛒 Einkaufsliste</button>
         <button type="button" data-tab="essen">🍽 Essensplanung</button>
       </div>
@@ -82,6 +90,16 @@
 
     <section id="settings" class="settings" hidden>
       <h2>Einstellungen</h2>
+
+      <div class="card-panel">
+        <h3>Konten</h3>
+        <p class="hint">Jedes Konto hat eigene „Meine Produkte“, eine eigene Einkaufsliste und einen eigenen Essensplan. Die Angebote sind für alle gleich.</p>
+        <ul id="account-list" class="account-list"></ul>
+        <form id="account-form" class="add-row" autocomplete="off">
+          <input id="account-name" type="text" placeholder="Neues Konto, z. B. Anna" maxlength="30" />
+          <button class="btn" type="submit">+</button>
+        </form>
+      </div>
 
       <div class="card-panel">
         <h3>Datenbank</h3>
@@ -118,9 +136,9 @@
   </main>
 
   <nav class="bottom-nav" id="bottom-nav">
-    <button data-view="week" class="active" type="button"><span>🛒</span>Diese Woche</button>
-    <button data-view="next" type="button"><span>🔮</span>Nächste Woche</button>
-    <button data-view="all" type="button"><span>📋</span>Alle</button>
+    <button data-view="all" class="active" type="button"><span>🏠</span>Alle Produkte</button>
+    <button data-view="offers" type="button"><span>🏷️</span>Angebote</button>
+    <button data-view="fav" type="button"><span>★</span>Meine Produkte</button>
     <button data-view="zettel" type="button"><span>📝</span>Einkaufs&shy;zettel</button>
   </nav>
 

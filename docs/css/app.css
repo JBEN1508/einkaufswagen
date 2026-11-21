@@ -184,3 +184,28 @@ main{ padding:0 16px; max-width:900px; margin:0 auto; }
 .einkauf li{ transition:opacity .25s ease, transform .25s ease; }
 .einkauf li.leaving{ opacity:0; transform:translateX(30px); }
 .toast-action{ background:none; border:none; color:#7fe3ff; font-weight:800; margin-left:10px; padding:4px 6px; cursor:pointer; font-size:.9rem; }
+
+/* Angebote: Wochen-Umschalter */
+.offer-tabs{ margin:2px 16px 10px; }
+.segmented.three{ grid-template-columns:1fr 1fr 1fr; }
+.segmented.three button{ padding:9px 4px; font-size:.86rem; }
+.tag.pred{ background:#2a2350; color:#cfc2ff; }
+
+/* Meine Produkte: Angebote hervorheben */
+.card.hl-now{ border:2px solid var(--ok); box-shadow:0 0 0 3px rgba(63,209,122,.12); }
+.card.hl-next{ border:2px solid var(--gold); }
+.fav-banner{ margin:-12px -14px 10px; padding:7px 14px; border-radius:12px 12px 0 0; font-weight:800; font-size:.88rem; }
+.hl-now .fav-banner{ background:var(--ok); color:#000; }
+.hl-next .fav-banner{ background:var(--gold); color:#000; }
+
+/* Konten */
+.menu-label{ font-size:.75rem; color:var(--muted); padding:6px 14px 2px; text-transform:uppercase; letter-spacing:.5px; }
+.menu hr{ border:none; border-top:1px solid var(--border); margin:6px 4px; }
+.menu button .check{ float:right; color:var(--accent); }
+.account-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px; }
+.account-list li{ display:flex; align-items:center; gap:8px; background:#0f0f0f; border:1px solid var(--border); border-radius:10px; padding:8px 10px; }
+.account-list li.active{ border-color:var(--accent); }
+.account-list .acc-name{ flex:1; font-weight:700; }
+.account-list .acc-name small{ color:var(--accent); font-weight:600; margin-left:6px; }
+.account-list button{ background:#2b2b2b; color:#fff; border:none; border-radius:8px; padding:7px 10px; cursor:pointer; font-size:.85rem; }
+.menu button{ display:flex; justify-content:space-between; align-items:center; gap:10px; } .menu button .check{ float:none; }
